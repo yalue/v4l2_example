@@ -1,0 +1,1220 @@
+<!doctype html>
+<html lang="en-US" prefix="og: http://ogp.me/ns#">
+<head>
+<meta name="robots" content="index,follow" />
+<meta name="googlebot" content="index,follow" />
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+<!-- Mobile viewport optimized -->
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
+
+<!-- Title -->
+
+
+<link rel="profile" href="http://gmpg.org/xfn/11" />
+<link rel="pingback" href="https://jwhsmith.net/xmlrpc.php" />
+
+<link rel="shortcut icon" href="https://jwhsmith.net/favicon.ico" />
+
+<!-- WP Head -->
+<meta name="generator" content="WordPress 4.7.2" />
+<meta name="template" content="Origin 0.5.8" />
+
+<!-- This site is optimized with the Yoast SEO plugin v4.0.2 - https://yoast.com/wordpress/plugins/seo/ -->
+<title>Capturing a webcam stream using v4l2 - JWH Smith</title>
+<meta name="description" content="v4l2 is a Linux kernel API and framework allowing you to manipulate your video capture devices easily, with a wide variety of options."/>
+<meta name="robots" content="noodp"/>
+<link rel="canonical" href="https://jwhsmith.net/2014/12/capturing-a-webcam-stream-using-v4l2/" />
+<meta property="og:locale" content="en_US" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Capturing a webcam stream using v4l2 - JWH Smith" />
+<meta property="og:description" content="v4l2 is a Linux kernel API and framework allowing you to manipulate your video capture devices easily, with a wide variety of options." />
+<meta property="og:url" content="https://jwhsmith.net/2014/12/capturing-a-webcam-stream-using-v4l2/" />
+<meta property="og:site_name" content="JWH Smith" />
+<meta property="article:tag" content="c" />
+<meta property="article:tag" content="capture" />
+<meta property="article:tag" content="linux" />
+<meta property="article:tag" content="sdl" />
+<meta property="article:tag" content="v4l2" />
+<meta property="article:tag" content="webcam" />
+<meta property="article:section" content="C/C++" />
+<meta property="article:published_time" content="2014-12-03T00:55:29+00:00" />
+<meta property="article:modified_time" content="2016-06-01T11:50:31+00:00" />
+<meta property="og:updated_time" content="2016-06-01T11:50:31+00:00" />
+<meta property="og:image" content="https://jwhsmith.net/wp-content/uploads/2014/12/webcam-icon.jpg" />
+<meta property="og:image:width" content="602" />
+<meta property="og:image:height" content="287" />
+<!-- / Yoast SEO plugin. -->
+
+<link rel='dns-prefetch' href='//s.w.org' />
+<link rel="alternate" type="application/rss+xml" title="JWH Smith &raquo; Feed" href="https://jwhsmith.net/feed/" />
+<link rel="alternate" type="application/rss+xml" title="JWH Smith &raquo; Comments Feed" href="https://jwhsmith.net/comments/feed/" />
+<link rel="alternate" type="application/rss+xml" title="JWH Smith &raquo; Capturing a webcam stream using v4l2 Comments Feed" href="https://jwhsmith.net/2014/12/capturing-a-webcam-stream-using-v4l2/feed/" />
+		<script type="text/javascript">
+			window._wpemojiSettings = {"baseUrl":"https:\/\/s.w.org\/images\/core\/emoji\/2.2.1\/72x72\/","ext":".png","svgUrl":"https:\/\/s.w.org\/images\/core\/emoji\/2.2.1\/svg\/","svgExt":".svg","source":{"concatemoji":"https:\/\/jwhsmith.net\/wp-includes\/js\/wp-emoji-release.min.js?ver=4.7.2"}};
+			!function(a,b,c){function d(a){var b,c,d,e,f=String.fromCharCode;if(!k||!k.fillText)return!1;switch(k.clearRect(0,0,j.width,j.height),k.textBaseline="top",k.font="600 32px Arial",a){case"flag":return k.fillText(f(55356,56826,55356,56819),0,0),!(j.toDataURL().length<3e3)&&(k.clearRect(0,0,j.width,j.height),k.fillText(f(55356,57331,65039,8205,55356,57096),0,0),b=j.toDataURL(),k.clearRect(0,0,j.width,j.height),k.fillText(f(55356,57331,55356,57096),0,0),c=j.toDataURL(),b!==c);case"emoji4":return k.fillText(f(55357,56425,55356,57341,8205,55357,56507),0,0),d=j.toDataURL(),k.clearRect(0,0,j.width,j.height),k.fillText(f(55357,56425,55356,57341,55357,56507),0,0),e=j.toDataURL(),d!==e}return!1}function e(a){var c=b.createElement("script");c.src=a,c.defer=c.type="text/javascript",b.getElementsByTagName("head")[0].appendChild(c)}var f,g,h,i,j=b.createElement("canvas"),k=j.getContext&&j.getContext("2d");for(i=Array("flag","emoji4"),c.supports={everything:!0,everythingExceptFlag:!0},h=0;h<i.length;h++)c.supports[i[h]]=d(i[h]),c.supports.everything=c.supports.everything&&c.supports[i[h]],"flag"!==i[h]&&(c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&c.supports[i[h]]);c.supports.everythingExceptFlag=c.supports.everythingExceptFlag&&!c.supports.flag,c.DOMReady=!1,c.readyCallback=function(){c.DOMReady=!0},c.supports.everything||(g=function(){c.readyCallback()},b.addEventListener?(b.addEventListener("DOMContentLoaded",g,!1),a.addEventListener("load",g,!1)):(a.attachEvent("onload",g),b.attachEvent("onreadystatechange",function(){"complete"===b.readyState&&c.readyCallback()})),f=c.source||{},f.concatemoji?e(f.concatemoji):f.wpemoji&&f.twemoji&&(e(f.twemoji),e(f.wpemoji)))}(window,document,window._wpemojiSettings);
+		</script>
+		<style type="text/css">
+img.wp-smiley,
+img.emoji {
+	display: inline !important;
+	border: none !important;
+	box-shadow: none !important;
+	height: 1em !important;
+	width: 1em !important;
+	margin: 0 .07em !important;
+	vertical-align: -0.1em !important;
+	background: none !important;
+	padding: 0 !important;
+}
+</style>
+<link rel='stylesheet' id='crayon-css'  href='https://jwhsmith.net/wp-content/plugins/crayon-syntax-highlighter/css/min/crayon.min.css?ver=2.7.1' type='text/css' media='all' />
+<link rel='stylesheet' id='crayon-theme-classic-css'  href='https://jwhsmith.net/wp-content/plugins/crayon-syntax-highlighter/themes/classic/classic.css?ver=2.7.1' type='text/css' media='all' />
+<link rel='stylesheet' id='crayon-font-monaco-css'  href='https://jwhsmith.net/wp-content/plugins/crayon-syntax-highlighter/fonts/monaco.css?ver=2.7.1' type='text/css' media='all' />
+<link rel='stylesheet' id='style-css'  href='https://jwhsmith.net/wp-content/themes/origin/style.min.css?ver=0.5.8' type='text/css' media='all' />
+<link rel='stylesheet' id='contact-form-7-css'  href='https://jwhsmith.net/wp-content/plugins/contact-form-7/includes/css/styles.css?ver=4.6' type='text/css' media='all' />
+<link rel='stylesheet' id='quotescollection-css'  href='https://jwhsmith.net/wp-content/plugins/quotes-collection/css/quotes-collection.css?ver=2.0.4' type='text/css' media='all' />
+<link rel='stylesheet' id='origin_fancybox-stylesheet-css'  href='https://jwhsmith.net/wp-content/themes/origin/js/fancybox/jquery.fancybox-1.3.4.css?ver=1' type='text/css' media='screen' />
+<script type='text/javascript' src='https://jwhsmith.net/wp-includes/js/jquery/jquery.js?ver=1.12.4'></script>
+<script type='text/javascript' src='https://jwhsmith.net/wp-includes/js/jquery/jquery-migrate.min.js?ver=1.4.1'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var CrayonSyntaxSettings = {"version":"2.7.1","is_admin":"0","ajaxurl":"https:\/\/jwhsmith.net\/wp-admin\/admin-ajax.php","prefix":"crayon-","setting":"crayon-setting","selected":"crayon-setting-selected","changed":"crayon-setting-changed","special":"crayon-setting-special","orig_value":"data-orig-value","debug":""};
+var CrayonSyntaxStrings = {"copy":"Press %s to Copy, %s to Paste","minimize":"Click To Expand Code"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='https://jwhsmith.net/wp-content/plugins/crayon-syntax-highlighter/js/min/crayon.min.js?ver=2.7.1'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var quotescollectionAjax = {"ajaxUrl":"https:\/\/jwhsmith.net\/wp-admin\/admin-ajax.php","nonce":"d302260cb1","nextQuote":"Next quote \u00bb","loading":"Loading...","error":"Error getting quote","autoRefreshMax":"20","autoRefreshCount":"0"};
+/* ]]> */
+</script>
+<script type='text/javascript' src='https://jwhsmith.net/wp-content/plugins/quotes-collection/js/quotes-collection.js?ver=2.0.4'></script>
+<link rel='https://api.w.org/' href='https://jwhsmith.net/wp-json/' />
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://jwhsmith.net/xmlrpc.php?rsd" />
+<link rel="wlwmanifest" type="application/wlwmanifest+xml" href="https://jwhsmith.net/wp-includes/wlwmanifest.xml" /> 
+<link rel='shortlink' href='https://jwhsmith.net/?p=212' />
+<link rel="alternate" type="application/json+oembed" href="https://jwhsmith.net/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fjwhsmith.net%2F2014%2F12%2Fcapturing-a-webcam-stream-using-v4l2%2F" />
+<link rel="alternate" type="text/xml+oembed" href="https://jwhsmith.net/wp-json/oembed/1.0/embed?url=https%3A%2F%2Fjwhsmith.net%2F2014%2F12%2Fcapturing-a-webcam-stream-using-v4l2%2F&#038;format=xml" />
+
+	<style type="text/css">
+
+		/* Font size. */
+					html { font-size: 16px; }
+		
+		/* Font family. */
+					body { font-family: 'Georgia', serif; }
+		
+		/* Link color. */
+					a, a:visited, #footer a:hover, .entry-title a:hover { color: #dd5424; }
+			#respond #submit, .button, a.button, .wpcf7-submit, #loginform .button-primary { background-color: #dd5424; }
+				a:hover, a:focus { color: #000; }
+
+		/* Custom CSS. */
+		
+	
+	</style>	
+
+<style type="text/css" id="custom-background-css">
+body.custom-background { background-color: #efefef; }
+</style>
+
+</head>
+
+<body class="wordpress ltr en_US parent-theme y2017 m02 d09 h02 thursday logged-out custom-background singular singular-post singular-post-212">
+
+	
+	<div id="container">
+		
+		<div class="wrap">
+
+				
+			<div id="header">
+	
+					
+					<div id="branding">
+						
+						<div id="site-title"><a href="https://jwhsmith.net" title="JWH Smith" rel="home"><span>JWH Smith</span></a></div>						
+					</div><!-- #branding -->
+					
+										
+					<div id="site-description"><span>Half-way between non-conformism and demanding nature</span></div>	
+						
+				
+		<div class="breadcrumb-trail breadcrumbs" itemprop="breadcrumb">
+			<span class="trail-browse">Browse:</span> <span class="trail-begin"><a href="https://jwhsmith.net" title="JWH Smith">Home</a></span>
+			 <span class="sep">&raquo;</span> <a href="https://jwhsmith.net/2014/" title="2014">2014</a>
+			 <span class="sep">&raquo;</span> <a href="https://jwhsmith.net/2014/12/" title="December 2014">December</a>
+			 <span class="sep">&raquo;</span> <span class="trail-end">Capturing a webcam stream using v4l2</span>
+		</div>	
+			</div><!-- #header -->
+	
+				
+				
+			<div id="main">
+	
+				
+	
+	<div id="content">
+
+		
+		<div class="hfeed">
+
+			
+				
+					
+					<div id="post-212" class="hentry post publish post-1 odd author-jwhsmith category-ccpp category-unixlinux post_tag-c post_tag-capture post_tag-linux post_tag-sdl post_tag-v4l2 post_tag-webcam">
+
+												
+						<div class="post-content">
+						
+							<img src="https://jwhsmith.net/wp-content/uploads/2014/12/webcam-icon.jpg" alt="Capturing a webcam stream using v4l2" class="single-thumbnail featured" />							
+							<h1 class='post-title entry-title'>Capturing a webcam stream using v4l2</h1>
+							<div class="byline"><time class="published updated" datetime="2014-12-03T00:55:29+00:00" title="Wednesday, December 3rd, 2014, 12:55 am">December 3, 2014</time> &middot; by <span class="author vcard"><a class="url fn n" rel="author" href="https://jwhsmith.net/author/jwhsmith/" title="John WH Smith">John WH Smith</a></span> &middot; in <span class="category"><a href="https://jwhsmith.net/category/ccpp/" rel="tag">C/C++</a>, <a href="https://jwhsmith.net/category/unixlinux/" rel="tag">UNIX &amp; Linux</a></span> </div>
+							<div class="entry-content">
+								
+								<p>A few months ago, I came across a blog post dating back to 2013, which described the basics of v4l2, and how to capture a video frame from a camera in Linux. However, this article was missing a few pieces, and since practical (and simple) examples of v4l2 examples are really rare online, I thought I&#8217;d publish an article about it.</p>
+<h3>What&#8217;s v4l2?</h3>
+<p>v4l2 stands for <strong>V</strong>ideo <strong>For</strong> <strong>L</strong>inux 2, the second version of the V4L API and framework. As opposed to many driver implementations, the v4l2 framework is made an integral part of the Linux kernel code. This static integration has been criticised by pro-BSDs, and several analogue projects were created for V4L2 on BSD (such as Video4BSD), however nothing came to an end (yet). The V4L2 API allows you to manipulate various video devices, for capture as well as for output. The API is also capable of handling other kind of devices such as TV tuners, but we&#8217;ll stick to webcams here.</p>
+<p>This API is mostly implemented as a set of IOCTL calls for you to make to your video devices. Once you&#8217;ve understood the general mechanism, and know a few IOCTLs, you&#8217;ll be able to manipulate your camera with a certain ease.</p>
+<h3>Common implementation of a v4l2 application</h3>
+<p>Aside from the parts strictly related to device communication, v4l2 expects you to rely on a few other system calls. In this article, we&#8217;ll go through the following steps:</p>
+<ol>
+<li>Open a descriptor to the device. This is done UNIX-style, basic I/O.</li>
+<li>Retrieve and analyse the device&#8217;s capabilities. V4L2 allows you to query a device for its <em>capabilities</em>, that is, the set of operations (roughly, IOCTL calls) it supports. I&#8217;ll give a little bit more details about that later.</li>
+<li>Set the capture format. This is where you choose your frame size, your format (MJPEG, RGB, YUV, &#8230;), and so on. Again, the device must be able to handle your format. There is an IOCTL call which allows to retrieve a list of available formats (which are independent from the <em>device&#8217;s</em> <em>capabilities</em>), I&#8217;ll give you a little example.</li>
+<li>Prepare the device for buffer handling. When capturing a frame, you have to submit a buffer to the device (<em>queue</em>), and retrieve it once it&#8217;s been filled with data (<em>dequeue</em>). However, before you can do this, you must inform the device about your buffers (<i>buffer request</i>).</li>
+<li>For each buffer you wish to use, you must negotiate characteristics with the device (buffer size, frame start offset in memory), and create a new memory mapping for it.</li>
+<li>Put the device into streaming mode.</li>
+<li>Once your buffers are ready, all you have to do is keep <em>queueing/dequeuing </em>your buffers repeatedly, and every call will bring you a new frame. The delay you set between each frames by putting your program to sleep is what determines your FPS (frames per second) rate.</li>
+<li>Turn off streaming mode.</li>
+<li>Close your descriptor to the device.</li>
+</ol>
+<p><strong>Note (see comments for more information) : depending on your device, this routine might not work for you. In some cases, devices cannot be put into streaming mode if no buffer is queued. In this case, you&#8217;ll have to queue a buffer, switch streaming on, dequeue/queue in a loop, and <strong>switch</strong> streaming off. More information about this will be given further down.</strong></p>
+<p>Each of these steps is covered by a system calls or a set of IOCTL calls. However, first things first, you need to know how to make an IOCTL call to a device. Consider a descriptor stored in <em>fd</em>, you may use the <em>ioctl</em> system call as follows:</p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a847708295198" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+ioctl(fd, MY_REQUEST, arg1, ...);</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a847708295198-1">1</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a847708295198-1"><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">MY_REQUEST</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">arg1</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-sy">.</span><span class="crayon-sy">.</span><span class="crayon-sy">.</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0005 seconds] -->
+<p></p>
+<ul>
+<li> <em>MY_REQUEST</em> is your IOCTL call. It&#8217;s a integer, and V4L2 provides you with constants which map these numbers to readable forms. For example, <em>VIDIOC_QUERYCAP</em> is used to retrieve the device&#8217;s capabilities.</li>
+<li>Depending on the request you&#8217;re submitting, you may need to pass additional parameters along. In most cases, you have to submit the address of a data structure through which you&#8217;ll be able to read the result of your query. The above <em>VIDIOC_QUERYCAP</em> requires one parameter: a pointer to <a title="v4l2_capability details" href="http://linuxtv.org/downloads/v4l-dvb-apis/vidioc-querycap.html#v4l2-capability" target="_blank">a <em>v4l2_capability</em> structure</a>.</li>
+</ul>
+<p>The IOCTL calls we&#8217;ll be using in this article return 0 on success, and a negative value otherwise.</p>
+<h3>Open and close a descriptor to the device</h3>
+<p>Those are easy, so let&#8217;s get over it quickly. Your file descriptor can be obtained just like any other using <em>open</em>, and disposed of using <em>close</em>, two basic UNIX I/O system calls:</p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a857659033667" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-toolbar" data-settings=" show" style="font-size: 12px !important;height: 18px !important; line-height: 18px !important;"><span class="crayon-title">Getting access to the device</span>
+			<div class="crayon-tools" style="font-size: 12px !important;height: 18px !important; line-height: 18px !important;"><div class="crayon-button crayon-nums-button" title="Toggle Line Numbers"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-plain-button" title="Toggle Plain Code"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-wrap-button" title="Toggle Line Wrap"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-expand-button" title="Expand Code"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-copy-button" title="Copy"><div class="crayon-button-icon"></div></div><div class="crayon-button crayon-popup-button" title="Open Code In New Window"><div class="crayon-button-icon"></div></div><span class="crayon-language">C</span></div></div>
+			<div class="crayon-info" style="min-height: 16.8px !important; line-height: 16.8px !important;"></div>
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+int main(void){
+    int fd;
+    if((fd = open("/dev/video0", O_RDWR)) &lt; 0){
+        perror("open");
+        exit(1);
+    }
+
+    // ...
+
+    close(fd);
+    return EXIT_SUCCESS;
+}</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a857659033667-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a857659033667-2">2</div><div class="crayon-num" data-line="crayon-589bc1cf5a857659033667-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a857659033667-4">4</div><div class="crayon-num" data-line="crayon-589bc1cf5a857659033667-5">5</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a857659033667-6">6</div><div class="crayon-num" data-line="crayon-589bc1cf5a857659033667-7">7</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a857659033667-8">8</div><div class="crayon-num" data-line="crayon-589bc1cf5a857659033667-9">9</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a857659033667-10">10</div><div class="crayon-num" data-line="crayon-589bc1cf5a857659033667-11">11</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a857659033667-12">12</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a857659033667-1"><span class="crayon-t">int</span><span class="crayon-h"> </span><span class="crayon-e">main</span><span class="crayon-sy">(</span><span class="crayon-t">void</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a857659033667-2"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-t">int</span><span class="crayon-h"> </span><span class="crayon-v">fd</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a857659033667-3"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-e">open</span><span class="crayon-sy">(</span><span class="crayon-s">"/dev/video0"</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">O_RDWR</span><span class="crayon-sy">)</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a857659033667-4"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"open"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a857659033667-5"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a857659033667-6"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-sy">}</span></div><div class="crayon-line" id="crayon-589bc1cf5a857659033667-7">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a857659033667-8"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-c">// ...</span></div><div class="crayon-line" id="crayon-589bc1cf5a857659033667-9">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a857659033667-10"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">close</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a857659033667-11"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-st">return</span><span class="crayon-h"> </span><span class="crayon-v">EXIT_SUCCESS</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a857659033667-12"><span class="crayon-sy">}</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0015 seconds] -->
+<p>Note that we need both <strong>read and write</strong> access to the device.</p>
+<h3>Retrieve the device&#8217;s capabilities</h3>
+<p>While v4l2 offers a generic set of calls for every device it supports, it is important to remember that not all devices can provide the same features. For this reason, the first step here will be to <em>query</em> the device about its capabilities and details. This is done through the <em>VIDIOC_QUERYCAP</em> request. Note that every <em>v4l2-compatible</em> device is expected to handle at least this request.</p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a85e713355517" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+struct v4l2_capability cap;
+if(ioctl(fd, VIDIOC_QUERYCAP, &amp;cap) &lt; 0){
+    perror("VIDIOC_QUERYCAP");
+    exit(1);
+}</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a85e713355517-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a85e713355517-2">2</div><div class="crayon-num" data-line="crayon-589bc1cf5a85e713355517-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a85e713355517-4">4</div><div class="crayon-num" data-line="crayon-589bc1cf5a85e713355517-5">5</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a85e713355517-1"><span class="crayon-t">struct</span><span class="crayon-h"> </span><span class="crayon-e">v4l2_capability </span><span class="crayon-v">cap</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a85e713355517-2"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">VIDIOC_QUERYCAP</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">cap</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line" id="crayon-589bc1cf5a85e713355517-3"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"VIDIOC_QUERYCAP"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a85e713355517-4"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a85e713355517-5"><span class="crayon-sy">}</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0010 seconds] -->
+<p>When this request succeeds, the <em>v4l2_capability</em> structure if filled with information about the device:</p>
+<ul>
+<li><em>driver</em>: The name of the driver in use while communicating with the device.</li>
+<li><em>card</em>: The name of the device in use.</li>
+<li><em>bus_info</em>: The location of the device in the eye of the operating system, in our case, <em>/dev/video0</em>.</li>
+<li><em>version</em>: Your driver&#8217;s version number.</li>
+<li><em>capabilities</em>: A 32-bit longer integer withholding your device&#8217;s capabilities (one bit per capability). <a title="Device capabilities" href="http://linuxtv.org/downloads/v4l-dvb-apis/vidioc-querycap.html#device-capabilities" target="_blank">You may find the list of all possibles capabilities here</a>. You can use a bitwise <em>&amp;</em> to check for a particular one:</li>
+</ul>
+<p></p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a865164438480" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+if(!(cap.capabilities &amp; V4L2_CAP_VIDEO_CAPTURE)){
+    fprintf(stderr, "The device does not handle single-planar video capture.\n");
+    exit(1);
+}</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a865164438480-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a865164438480-2">2</div><div class="crayon-num" data-line="crayon-589bc1cf5a865164438480-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a865164438480-4">4</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a865164438480-1"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-o">!</span><span class="crayon-sy">(</span><span class="crayon-v">cap</span><span class="crayon-sy">.</span><span class="crayon-v">capabilities</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-h"> </span><span class="crayon-v">V4L2_CAP_VIDEO_CAPTURE</span><span class="crayon-sy">)</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a865164438480-2"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">fprintf</span><span class="crayon-sy">(</span><span class="crayon-v">stderr</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-s">"The device does not handle single-planar video capture.\n"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a865164438480-3"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a865164438480-4"><span class="crayon-sy">}</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0008 seconds] -->
+<p>There are few other fields but I&#8217;ll stop here. If you&#8217;re interested, you&#8217;ll find more details in the links above. Now when it comes to capabilities, it&#8217;d be nice to check for the following:</p>
+<ul>
+<li><em>V4L2_CAP_VIDEO_CAPTURE</em> : we need single-planar video capture, because&#8230; we&#8217;re capturing video frames.</li>
+<li><em>V4L2_CAP_STREAMING</em> : we need the device to handle frame streaming so that our <em>queue/dequeue</em> routine can go fluently.</li>
+</ul>
+<p>If your application has more specific needs, don&#8217;t hesitate to use the table linked above to check for more capabilities. You may also use the <i>card</i> and <em>bus_info</em> fields if you have several devices available and want the user to choose by name and path.</p>
+<h3>Set our video format</h3>
+<p>Once we&#8217;ve made sure that our device knows the basics, we need to set our frame format. Note that this format must be made available by your device. If you don&#8217;t want to list formats programmatically, I suggest you use <a title="V4L2-ctl" href="http://ivtvdriver.org/index.php/V4l2-ctl" target="_blank"><strong>v4l2-ctl</strong></a> which will do that for you just fine:</p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a86d811500497" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+$ v4l2-ctl -d /dev/video0 --list-formats-ext</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a86d811500497-1">1</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a86d811500497-1">$ v4l2-ctl -d /dev/video0 --list-formats-ext</div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0001 seconds] -->
+<p>This will give you a list of all available formats. Once you&#8217;ve chosen yours, you&#8217;ll need to use <em>VIDIOC_S_FMT</em> (set format) to tell your device. This is done using a <em>v4l2_format</em> structure:</p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a873202014876" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+struct v4l2_format format;
+format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+format.fmt.pix.pixelformat = V4L2_PIX_FMT_MJPEG;
+format.fmt.pix.width = 800;
+format.fmt.pix.height = 600;
+
+if(ioctl(fd, VIDIOC_S_FMT, &amp;format) &lt; 0){
+    perror("VIDIOC_S_FMT");
+    exit(1);
+}</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a873202014876-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a873202014876-2">2</div><div class="crayon-num" data-line="crayon-589bc1cf5a873202014876-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a873202014876-4">4</div><div class="crayon-num" data-line="crayon-589bc1cf5a873202014876-5">5</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a873202014876-6">6</div><div class="crayon-num" data-line="crayon-589bc1cf5a873202014876-7">7</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a873202014876-8">8</div><div class="crayon-num" data-line="crayon-589bc1cf5a873202014876-9">9</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a873202014876-10">10</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a873202014876-1"><span class="crayon-t">struct</span><span class="crayon-h"> </span><span class="crayon-e">v4l2_format </span><span class="crayon-v">format</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a873202014876-2"><span class="crayon-v">format</span><span class="crayon-sy">.</span><span class="crayon-v">type</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">V4L2_BUF_TYPE_VIDEO_CAPTURE</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a873202014876-3"><span class="crayon-v">format</span><span class="crayon-sy">.</span><span class="crayon-v">fmt</span><span class="crayon-sy">.</span><span class="crayon-v">pix</span><span class="crayon-sy">.</span><span class="crayon-v">pixelformat</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">V4L2_PIX_FMT_MJPEG</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a873202014876-4"><span class="crayon-v">format</span><span class="crayon-sy">.</span><span class="crayon-v">fmt</span><span class="crayon-sy">.</span><span class="crayon-v">pix</span><span class="crayon-sy">.</span><span class="crayon-v">width</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-cn">800</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a873202014876-5"><span class="crayon-v">format</span><span class="crayon-sy">.</span><span class="crayon-v">fmt</span><span class="crayon-sy">.</span><span class="crayon-v">pix</span><span class="crayon-sy">.</span><span class="crayon-v">height</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-cn">600</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a873202014876-6">&nbsp;</div><div class="crayon-line" id="crayon-589bc1cf5a873202014876-7"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">VIDIOC_S_FMT</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">format</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a873202014876-8"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"VIDIOC_S_FMT"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a873202014876-9"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a873202014876-10"><span class="crayon-sy">}</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0020 seconds] -->
+<p></p>
+<ul>
+<li> <em>type:</em> remember that V4L2 can handle all kinds of devices. It&#8217;d be nice to tell it we&#8217;re doing video capture.</li>
+<li><em>fmt.pix.pixelformat</em>: this is your frame format (RGB, YUV, MJPEG, &#8230;). <strong>v4l2-ctl</strong> told you which ones you had available, at which resolutions.</li>
+<li><em>fmt.pix.width</em> / <em>fmt.pix.height</em>: your frame dimensions. Again, must be handled by your device, for the format you chose.</li>
+</ul>
+<p>In my case, I chose MJPEG because it is extremely easy to display using the <em>SDL</em>. Plus, it takes less memory than RGB and YUV. As far as I know, MJPEG is supported by many cameras. Also remember that these parameters have a direct influence on the amount of memory you&#8217;ll have to request for the buffers later on. For instance, for a 800&#215;600 RGB24 frame, you&#8217;ll store 800&#215;600 = 480000 pixels, each one requiring 3 bytes (R, G, B). All in all: 1440000 bytes (about 1.5MB) per buffer.</p>
+<p><strong>Retrieving all available formats programmatically</strong> : <em>v4l2-ctl</em> uses the <em>VIDIOC_ENUM_FMT</em> call to list your formats. <a title="VIDIOC_ENUM_FMT" href="http://linuxtv.org/downloads/v4l-dvb-apis/vidioc-enum-fmt.html" target="_blank">You will find more information about this call (and its fellow <em>v4l2_fmtdesc</em> structure) on this page</a>. To browse all formats, declare your first structure with <i>.index = 0</i> and keep incrementing until your <i>ioctl</i> returns <em>EINVAL</em>. Additionally, you might want to <a title="Frame sizes" href="http://linuxtv.org/downloads/v4l-dvb-apis/vidioc-enum-framesizes.html" target="_blank">have a look at <em>VIDIOC_ENUM_FRAMESIZES</em> to retrieve information about the resolutions supported by your formats</a>.</p>
+<h3>Inform the device about your future buffers</h3>
+<p>This step is quite simple, but it&#8217;s still necessary: you need to inform the device about your buffers: how are you going to allocate them? How many are there? This will allow the device to write buffer data correctly. In our case, we&#8217;ll use a single buffer, and map our memory using <em>mmap</em>. All this information is sent using the <em>VIDIOC_REQBUFS</em> call and a <em>v4l2_requestbuffers</em> structure:</p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a87b365884913" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+struct v4l2_requestbuffers bufrequest;
+bufrequest.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+bufrequest.memory = V4L2_MEMORY_MMAP;
+bufrequest.count = 1;
+
+if(ioctl(fd, VIDIOC_REQBUFS, &amp;bufrequest) &lt; 0){
+    perror("VIDIOC_REQBUFS");
+    exit(1);
+}</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a87b365884913-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a87b365884913-2">2</div><div class="crayon-num" data-line="crayon-589bc1cf5a87b365884913-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a87b365884913-4">4</div><div class="crayon-num" data-line="crayon-589bc1cf5a87b365884913-5">5</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a87b365884913-6">6</div><div class="crayon-num" data-line="crayon-589bc1cf5a87b365884913-7">7</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a87b365884913-8">8</div><div class="crayon-num" data-line="crayon-589bc1cf5a87b365884913-9">9</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a87b365884913-1"><span class="crayon-t">struct</span><span class="crayon-h"> </span><span class="crayon-e">v4l2_requestbuffers </span><span class="crayon-v">bufrequest</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a87b365884913-2"><span class="crayon-v">bufrequest</span><span class="crayon-sy">.</span><span class="crayon-v">type</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">V4L2_BUF_TYPE_VIDEO_CAPTURE</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a87b365884913-3"><span class="crayon-v">bufrequest</span><span class="crayon-sy">.</span><span class="crayon-v">memory</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">V4L2_MEMORY_MMAP</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a87b365884913-4"><span class="crayon-v">bufrequest</span><span class="crayon-sy">.</span><span class="crayon-v">count</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-cn">1</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a87b365884913-5">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a87b365884913-6"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">VIDIOC_REQBUFS</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">bufrequest</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line" id="crayon-589bc1cf5a87b365884913-7"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"VIDIOC_REQBUFS"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a87b365884913-8"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a87b365884913-9"><span class="crayon-sy">}</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0015 seconds] -->
+<p></p>
+<ul>
+<li><em>type:</em> again, the kind of capture we&#8217;re dealing with.</li>
+<li><em>memory</em>: how we&#8217;re going to allocate the buffers, and how the device should handle them. Here, we&#8217;ll be using memory mapping, but <a title="Memory allocation types" href="http://linuxtv.org/downloads/v4l-dvb-apis/buffer.html#v4l2-memory" target="_blank">you&#8217;ll find that there are a few other options available</a>.</li>
+<li><em>count</em>: our buffer count, one here (no need to make it trickier by adding buffers for now).</li>
+</ul>
+<h3>Allocate your buffers</h3>
+<p>Now that the device knows how to provide its data, we need to ask it about the amount of memory it needs, and allocate it. Basically, the device is making the calculation I made above, and telling you how many bytes it need for your format and your frame dimensions. This information is retrieved using the <em>VIDIOC_QUERYBUF</em> call, and its <em>v4l2_buffer</em> structure.</p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a882483598909" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+struct v4l2_buffer bufferinfo;
+memset(&amp;bufferinfo, 0, sizeof(bufferinfo));
+
+bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+bufferinfo.memory = V4L2_MEMORY_MMAP;
+bufferinfo.index = 0;
+
+if(ioctl(fd, VIDIOC_QUERYBUF, &amp;bufferinfo) &lt; 0){
+    perror("VIDIOC_QUERYBUF");
+    exit(1);
+}</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a882483598909-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a882483598909-2">2</div><div class="crayon-num" data-line="crayon-589bc1cf5a882483598909-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a882483598909-4">4</div><div class="crayon-num" data-line="crayon-589bc1cf5a882483598909-5">5</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a882483598909-6">6</div><div class="crayon-num" data-line="crayon-589bc1cf5a882483598909-7">7</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a882483598909-8">8</div><div class="crayon-num" data-line="crayon-589bc1cf5a882483598909-9">9</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a882483598909-10">10</div><div class="crayon-num" data-line="crayon-589bc1cf5a882483598909-11">11</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a882483598909-1"><span class="crayon-t">struct</span><span class="crayon-h"> </span><span class="crayon-e">v4l2_buffer </span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a882483598909-2"><span class="crayon-e">memset</span><span class="crayon-sy">(</span><span class="crayon-o">&amp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-e">sizeof</span><span class="crayon-sy">(</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">)</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a882483598909-3">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a882483598909-4"><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">type</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">V4L2_BUF_TYPE_VIDEO_CAPTURE</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a882483598909-5"><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">memory</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">V4L2_MEMORY_MMAP</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a882483598909-6"><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">index</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a882483598909-7">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a882483598909-8"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">VIDIOC_QUERYBUF</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line" id="crayon-589bc1cf5a882483598909-9"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"VIDIOC_QUERYBUF"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a882483598909-10"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a882483598909-11"><span class="crayon-sy">}</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0018 seconds] -->
+<p>A little difference here: I&#8217;m clearing the structure&#8217;s memory space before using it. In this case, we won&#8217;t be the only one writing into this structure, so will the device. For this reason, since all fields aren&#8217;t initialised by the programmer, it&#8217;s best to clean up garbage first. Just like before, we tell the device about our video capture and memory mapping. The <em>index</em> field is the index of our buffer: indices start at 0, and each buffer has his own. Since we&#8217;ve only got one buffer, there is no need to put that code into a loop. Usually, you&#8217;d iterate from 0 to <i>bufrequest.count</i> (which may have changed after the IOCTL if the device didn&#8217;t like it!) and allocate each buffer, one after the other.</p>
+<p>Now, once this call has been made, the structure&#8217;s <em>length</em> and <em>m.offset</em> fields are ready. We can therefore map our memory:</p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a889882358035" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+void* buffer_start = mmap(
+    NULL,
+    bufferinfo.length,
+    PROT_READ | PROT_WRITE,
+    MAP_SHARED,
+    fd,
+    bufferinfo.m.offset
+);
+
+if(buffer_start == MAP_FAILED){
+    perror("mmap");
+    exit(1);
+}
+
+memset(buffer_start, 0, bufferinfo.length);</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a889882358035-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a889882358035-2">2</div><div class="crayon-num" data-line="crayon-589bc1cf5a889882358035-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a889882358035-4">4</div><div class="crayon-num" data-line="crayon-589bc1cf5a889882358035-5">5</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a889882358035-6">6</div><div class="crayon-num" data-line="crayon-589bc1cf5a889882358035-7">7</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a889882358035-8">8</div><div class="crayon-num" data-line="crayon-589bc1cf5a889882358035-9">9</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a889882358035-10">10</div><div class="crayon-num" data-line="crayon-589bc1cf5a889882358035-11">11</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a889882358035-12">12</div><div class="crayon-num" data-line="crayon-589bc1cf5a889882358035-13">13</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a889882358035-14">14</div><div class="crayon-num" data-line="crayon-589bc1cf5a889882358035-15">15</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a889882358035-1"><span class="crayon-t">void</span><span class="crayon-o">*</span><span class="crayon-h"> </span><span class="crayon-v">buffer_start</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-e">mmap</span><span class="crayon-sy">(</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a889882358035-2"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-t">NULL</span><span class="crayon-sy">,</span></div><div class="crayon-line" id="crayon-589bc1cf5a889882358035-3"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">length</span><span class="crayon-sy">,</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a889882358035-4"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">PROT_READ</span><span class="crayon-h"> </span><span class="crayon-o">|</span><span class="crayon-h"> </span><span class="crayon-v">PROT_WRITE</span><span class="crayon-sy">,</span></div><div class="crayon-line" id="crayon-589bc1cf5a889882358035-5"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">MAP_SHARED</span><span class="crayon-sy">,</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a889882358035-6"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span></div><div class="crayon-line" id="crayon-589bc1cf5a889882358035-7"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">m</span><span class="crayon-sy">.</span><span class="crayon-i">offset</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a889882358035-8"><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a889882358035-9">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a889882358035-10"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-v">buffer_start</span><span class="crayon-h"> </span><span class="crayon-o">==</span><span class="crayon-h"> </span><span class="crayon-v">MAP_FAILED</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line" id="crayon-589bc1cf5a889882358035-11"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"mmap"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a889882358035-12"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a889882358035-13"><span class="crayon-sy">}</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a889882358035-14">&nbsp;</div><div class="crayon-line" id="crayon-589bc1cf5a889882358035-15"><span class="crayon-e">memset</span><span class="crayon-sy">(</span><span class="crayon-v">buffer_start</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">length</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0018 seconds] -->
+<p>Since memory mapping is a large topic, here is <a title="mmap" href="http://man7.org/linux/man-pages/man2/mmap.2.html" target="_blank">a link to <em>mmap</em>&#8216;s man page</a>, and <a title="Memory mapping and DMA" href="http://lwn.net/images/pdf/LDD3/ch15.pdf" target="_blank">more information about memory mapping under Linux</a> (<em>Linux Device Drivers, J. Corbet, A. Rubini, G. Kroah-Hartman</em>). You don&#8217;t have to know everything about that to go further, but that&#8217;s another fascinating subject if you&#8217;re curious.</p>
+<p>Here again, think about cleaning up the area. Your frame is going to be stored in there, you don&#8217;t want garbage messing around.</p>
+<h3>Get a frame</h3>
+<p>This is the part of the code you might want to put in a temporised loop. For this article, I&#8217;ll just retrieve one frame from the device and terminate. This is done in three steps:</p>
+<ol>
+<li>Prepare information about the buffer you&#8217;re queueing. This requires another <em>v4l2_buffer</em> structure we saw above, nothing new. This helps the device locating your buffer.</li>
+<li>Activate the device&#8217;s streaming capability (which we checked earlier through <em>v4l2_capabilities</em>).</li>
+<li><em>Queue</em> the buffer. You&#8217;re basically handing your buffer over to the device (putting it into the <em>incoming queue</em>), and wait for it to write stuff in it. This is done using the <em>VIDIOC_QBUF</em> call.</li>
+<li><em>Dequeue</em> the buffer. The device&#8217;s done, you may read your buffer. This step is handled using the <em>VIDIOC_DQBUF</em> call: you&#8217;re retrieving the buffer from the <em>outgoing queue</em>. Note that this call <a title="VIDIOC_DQBUF" href="http://linuxtv.org/downloads/v4l-dvb-apis/vidioc-qbuf.html" target="_blank">may hang a little</a>: your device needs time to write its frame into your buffer, as said in the documentation:</li>
+</ol>
+<blockquote><p>By default <code class="constant">VIDIOC_DQBUF</code> blocks when no buffer is in the outgoing queue. When the <code class="constant">O_NONBLOCK</code> flag was given to the open() <del>function</del> system call, <code class="constant">VIDIOC_DQBUF</code> returns immediately with an <span class="errorcode">EAGAIN</span> error code when no buffer is available.</p></blockquote>
+<p></p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a891899022983" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+struct v4l2_buffer bufferinfo;
+memset(&amp;bufferinfo, 0, sizeof(bufferinfo));
+
+bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+bufferinfo.memory = V4L2_MEMORY_MMAP;
+bufferinfo.index = 0; /* Queueing buffer index 0. */
+
+// Activate streaming
+int type = bufferinfo.type;
+if(ioctl(fd, VIDIOC_STREAMON, &amp;type) &lt; 0){
+    perror("VIDIOC_STREAMON");
+    exit(1);
+}
+
+/* Here is where you typically start two loops:
+ * - One which runs for as long as you want to
+ *   capture frames (shoot the video).
+ * - One which iterates over your buffers everytime. */
+
+// Put the buffer in the incoming queue.
+if(ioctl(fd, VIDIOC_QBUF, &amp;bufferinfo) &lt; 0){
+    perror("VIDIOC_QBUF");
+    exit(1);
+}
+
+// The buffer's waiting in the outgoing queue.
+if(ioctl(fd, VIDIOC_DQBUF, &amp;bufferinfo) &lt; 0){
+    perror("VIDIOC_QBUF");
+    exit(1);
+}
+
+/* Your loops end here. */
+
+// Deactivate streaming
+if(ioctl(fd, VIDIOC_STREAMOFF, &amp;type) &lt; 0){
+    perror("VIDIOC_STREAMOFF");
+    exit(1);
+}</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-2">2</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-4">4</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-5">5</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-6">6</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-7">7</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-8">8</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-9">9</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-10">10</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-11">11</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-12">12</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-13">13</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-14">14</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-15">15</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-16">16</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-17">17</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-18">18</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-19">19</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-20">20</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-21">21</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-22">22</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-23">23</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-24">24</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-25">25</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-26">26</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-27">27</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-28">28</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-29">29</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-30">30</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-31">31</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-32">32</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-33">33</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-34">34</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-35">35</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-36">36</div><div class="crayon-num" data-line="crayon-589bc1cf5a891899022983-37">37</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a891899022983-38">38</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a891899022983-1"><span class="crayon-t">struct</span><span class="crayon-h"> </span><span class="crayon-e">v4l2_buffer </span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-2"><span class="crayon-e">memset</span><span class="crayon-sy">(</span><span class="crayon-o">&amp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-e">sizeof</span><span class="crayon-sy">(</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">)</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-3">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-4"><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">type</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">V4L2_BUF_TYPE_VIDEO_CAPTURE</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-5"><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">memory</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">V4L2_MEMORY_MMAP</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-6"><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">index</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">;</span><span class="crayon-h"> </span><span class="crayon-c">/* Queueing buffer index 0. */</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-7">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-8"><span class="crayon-c">// Activate streaming</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-9"><span class="crayon-t">int</span><span class="crayon-h"> </span><span class="crayon-v">type</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">type</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-10"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">VIDIOC_STREAMON</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">type</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-11"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"VIDIOC_STREAMON"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-12"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-13"><span class="crayon-sy">}</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-14">&nbsp;</div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-15"><span class="crayon-c">/* Here is where you typically start two loops:</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-16"><span class="crayon-c"> * - One which runs for as long as you want to</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-17"><span class="crayon-c"> *&nbsp;&nbsp; capture frames (shoot the video).</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-18"><span class="crayon-c"> * - One which iterates over your buffers everytime. */</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-19">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-20"><span class="crayon-c">// Put the buffer in the incoming queue.</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-21"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">VIDIOC_QBUF</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-22"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"VIDIOC_QBUF"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-23"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-24"><span class="crayon-sy">}</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-25">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-26"><span class="crayon-c">// The buffer's waiting in the outgoing queue.</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-27"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">VIDIOC_DQBUF</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-28"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"VIDIOC_QBUF"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-29"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-30"><span class="crayon-sy">}</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-31">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-32"><span class="crayon-c">/* Your loops end here. */</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-33">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-34"><span class="crayon-c">// Deactivate streaming</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-35"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">VIDIOC_STREAMOFF</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">type</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-36"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"VIDIOC_STREAMOFF"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a891899022983-37"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a891899022983-38"><span class="crayon-sy">}</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0044 seconds] -->
+<p>Again, this part of your code should be in a loop if you&#8217;re using several buffers (increment <em>bufferinfo.index</em>) :</p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a898909902945" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+/* ioctl: VIDIOC_STREAMON */
+
+while(capture_is_running){
+    for(i = 0; i &lt; bufrequest.count; i++){
+        bufferinfo.index = i;
+        /* ioctl: VIDIOC_QBUF */
+        /* ioctl: VIDIOC_DQBUF */
+    }
+}</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a898909902945-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a898909902945-2">2</div><div class="crayon-num" data-line="crayon-589bc1cf5a898909902945-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a898909902945-4">4</div><div class="crayon-num" data-line="crayon-589bc1cf5a898909902945-5">5</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a898909902945-6">6</div><div class="crayon-num" data-line="crayon-589bc1cf5a898909902945-7">7</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a898909902945-8">8</div><div class="crayon-num" data-line="crayon-589bc1cf5a898909902945-9">9</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a898909902945-1"><span class="crayon-c">/* ioctl: VIDIOC_STREAMON */</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a898909902945-2">&nbsp;</div><div class="crayon-line" id="crayon-589bc1cf5a898909902945-3"><span class="crayon-st">while</span><span class="crayon-sy">(</span><span class="crayon-v">capture_is_running</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a898909902945-4"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-st">for</span><span class="crayon-sy">(</span><span class="crayon-v">i</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">;</span><span class="crayon-h"> </span><span class="crayon-v">i</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-v">bufrequest</span><span class="crayon-sy">.</span><span class="crayon-v">count</span><span class="crayon-sy">;</span><span class="crayon-h"> </span><span class="crayon-v">i</span><span class="crayon-o">++</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line" id="crayon-589bc1cf5a898909902945-5"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">index</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">i</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a898909902945-6"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-c">/* ioctl: VIDIOC_QBUF */</span></div><div class="crayon-line" id="crayon-589bc1cf5a898909902945-7"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-c">/* ioctl: VIDIOC_DQBUF */</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a898909902945-8"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-sy">}</span></div><div class="crayon-line" id="crayon-589bc1cf5a898909902945-9"><span class="crayon-sy">}</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0012 seconds] -->
+<p>Once the <em>VIDIOC_DQBUF</em> <i>ioctl</i> call has successfully returned, you&#8217;re buffer(s) is/are filled with your data. In my case, I have a beautiful <em>MJPEG</em> frame ready to be processed. If you&#8217;re using RGB or YUV, you are now able to get color information about everything single pixel of your frame: we did it!</p>
+<p><strong>Note (see comments for more information) : as I said earlier, this routine (stream on, queue/dequeue, stream off) might not work for you. Some devices will refuse to get into streaming mode if there isn&#8217;t already a buffer queued. In this case, your program should look more like this:</strong></p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a89f512684977" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+struct v4l2_buffer bufferinfo;
+
+memset(&amp;bufferinfo, 0, sizeof(bufferinfo));
+bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+bufferinfo.memory = V4L2_MEMORY_MMAP;
+bufferinfo.index = 0; /* Queueing buffer index 0. */
+
+// Put the buffer in the incoming queue.
+if(ioctl(fd, VIDIOC_QBUF, &amp;bufferinfo) &lt; 0){
+    perror("VIDIOC_QBUF");
+    exit(1);
+}
+
+// Activate streaming
+int type = bufferinfo.type;
+if(ioctl(fd, VIDIOC_STREAMON, &amp;type) &lt; 0){
+    perror("VIDIOC_STREAMON");
+    exit(1);
+}
+
+while(/* main loop */){
+    // Dequeue the buffer.
+    if(ioctl(fd, VIDIOC_DQBUF, &amp;bufferinfo) &lt; 0){
+        perror("VIDIOC_QBUF");
+        exit(1);
+    }
+
+    bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    bufferinfo.memory = V4L2_MEMORY_MMAP;
+    /* Set the index if using several buffers */
+
+    // Queue the next one.
+    if(ioctl(fd, VIDIOC_QBUF, &amp;bufferinfo) &lt; 0){
+        perror("VIDIOC_QBUF");
+        exit(1);
+    }
+}
+
+// Deactivate streaming
+if(ioctl(fd, VIDIOC_STREAMOFF, &amp;type) &lt; 0){
+    perror("VIDIOC_STREAMOFF");
+    exit(1);
+}</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-2">2</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-4">4</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-5">5</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-6">6</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-7">7</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-8">8</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-9">9</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-10">10</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-11">11</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-12">12</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-13">13</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-14">14</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-15">15</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-16">16</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-17">17</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-18">18</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-19">19</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-20">20</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-21">21</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-22">22</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-23">23</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-24">24</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-25">25</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-26">26</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-27">27</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-28">28</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-29">29</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-30">30</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-31">31</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-32">32</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-33">33</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-34">34</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-35">35</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-36">36</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-37">37</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-38">38</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-39">39</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-40">40</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-41">41</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a89f512684977-42">42</div><div class="crayon-num" data-line="crayon-589bc1cf5a89f512684977-43">43</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-1"><span class="crayon-t">struct</span><span class="crayon-h"> </span><span class="crayon-e">v4l2_buffer </span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-2">&nbsp;</div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-3"><span class="crayon-e">memset</span><span class="crayon-sy">(</span><span class="crayon-o">&amp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-r">sizeof</span><span class="crayon-sy">(</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">)</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-4"><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">type</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">V4L2_BUF_TYPE_VIDEO_CAPTURE</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-5"><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">memory</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">V4L2_MEMORY_MMAP</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-6"><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">index</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">;</span><span class="crayon-h"> </span><span class="crayon-c">/* Queueing buffer index 0. */</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-7">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-8"><span class="crayon-c">// Put the buffer in the incoming queue.</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-9"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">VIDIOC_QBUF</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-10"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"VIDIOC_QBUF"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-11"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-12"><span class="crayon-sy">}</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-13">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-14"><span class="crayon-c">// Activate streaming</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-15"><span class="crayon-t">int</span><span class="crayon-h"> </span><span class="crayon-v">type</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">type</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-16"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">VIDIOC_STREAMON</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">type</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-17"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"VIDIOC_STREAMON"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-18"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-19"><span class="crayon-sy">}</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-20">&nbsp;</div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-21"><span class="crayon-st">while</span><span class="crayon-sy">(</span><span class="crayon-c">/* main loop */</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-22"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-c">// Dequeue the buffer.</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-23"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">VIDIOC_DQBUF</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-24"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"VIDIOC_QBUF"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-25"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-26"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-sy">}</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-27">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-28"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">type</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">V4L2_BUF_TYPE_VIDEO_CAPTURE</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-29"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">memory</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-v">V4L2_MEMORY_MMAP</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-30"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-c">/* Set the index if using several buffers */</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-31">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-32"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-c">// Queue the next one.</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-33"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">VIDIOC_QBUF</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-34"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"VIDIOC_QBUF"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-35"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-36"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-sy">}</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-37"><span class="crayon-sy">}</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-38">&nbsp;</div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-39"><span class="crayon-c">// Deactivate streaming</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-40"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-e">ioctl</span><span class="crayon-sy">(</span><span class="crayon-v">fd</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">VIDIOC_STREAMOFF</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">type</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-41"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"VIDIOC_STREAMOFF"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a89f512684977-42"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a89f512684977-43"><span class="crayon-sy">}</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0058 seconds] -->
+<p>(of course, you might need another loop in the first one if you decided to use several buffers)</p>
+<p>In the example I gave throughout this article, you should now be closing your descriptor to the device. However, here are two little complements if you&#8217;re using MJPEG as I was: <em>print your frame to a JPEG file</em> and <em>display your frame into a SDL frame</em>. I&#8217;ll assume you know about basic UNIX I/O routines and SDL mechanisms, since this isn&#8217;t the topic of this article.</p>
+<h3>Bonus: save your frame as a JPEG file</h3>
+<p>MJPEG is nothing but an animated extension of the JPEG format, a sequence of JPEG images. Since we captured a single frame here, there is no real <em>MJPEG</em> involved: all we have is a <em>JPEG image</em>&#8216;s data. This means that if you want to transform your buffer into a file&#8230; all you have to do is write it:</p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a8a6767603582" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+int jpgfile;
+if((jpgfile = open("/tmp/myimage.jpeg", O_WRONLY | O_CREAT, 0660)) &lt; 0){
+    perror("open");
+    exit(1);
+}
+
+write(jpgfile, buffer_start, bufferinfo.length);
+close(jpgfile);</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a8a6767603582-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8a6767603582-2">2</div><div class="crayon-num" data-line="crayon-589bc1cf5a8a6767603582-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8a6767603582-4">4</div><div class="crayon-num" data-line="crayon-589bc1cf5a8a6767603582-5">5</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8a6767603582-6">6</div><div class="crayon-num" data-line="crayon-589bc1cf5a8a6767603582-7">7</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8a6767603582-8">8</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a8a6767603582-1"><span class="crayon-t">int</span><span class="crayon-h"> </span><span class="crayon-v">jpgfile</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8a6767603582-2"><span class="crayon-st">if</span><span class="crayon-sy">(</span><span class="crayon-sy">(</span><span class="crayon-v">jpgfile</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-e">open</span><span class="crayon-sy">(</span><span class="crayon-s">"/tmp/myimage.jpeg"</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">O_WRONLY</span><span class="crayon-h"> </span><span class="crayon-o">|</span><span class="crayon-h"> </span><span class="crayon-v">O_CREAT</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-cn">0660</span><span class="crayon-sy">)</span><span class="crayon-sy">)</span><span class="crayon-h"> </span><span class="crayon-o">&lt;</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">{</span></div><div class="crayon-line" id="crayon-589bc1cf5a8a6767603582-3"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">perror</span><span class="crayon-sy">(</span><span class="crayon-s">"open"</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8a6767603582-4"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-e">exit</span><span class="crayon-sy">(</span><span class="crayon-cn">1</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a8a6767603582-5"><span class="crayon-sy">}</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8a6767603582-6">&nbsp;</div><div class="crayon-line" id="crayon-589bc1cf5a8a6767603582-7"><span class="crayon-e">write</span><span class="crayon-sy">(</span><span class="crayon-v">jpgfile</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">buffer_start</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">length</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8a6767603582-8"><span class="crayon-e">close</span><span class="crayon-sy">(</span><span class="crayon-v">jpgfile</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0017 seconds] -->
+<p>Now, since we&#8217;re only writing the JPEG data, and not the associated metadata, it is very likely that your image reader will refuse to display anything, claiming it was unable to determine the frame&#8217;s dimensions. I&#8217;m giving you a little piece of the puzzle, but I didn&#8217;t try to write the JPEG&#8217;s metadata myself, since this wasn&#8217;t part of my program&#8217;s needs. Note that some readers will allow you to specify your image&#8217;s width.</p>
+<h3>Bonus: displaying a MJPEG frame with the SDL</h3>
+<p>The SDL (1.2) has a very interesting feature: it can display a frame using a MJPEG directly! No need to convert your image, or to make it go through never-ending processing, all you have to do is provide SDL with your buffer, your dimensions, and it&#8217;ll do the rest. For that, we&#8217;ll need both the <em>SDL</em> and the <em>SDL Image Library (SDL_Image)</em>. The basic setup is as follows:</p>
+<ol>
+<li>Initialise the SDL, the screen surface and SDL_Image.</li>
+<li>Create a I/O stream (RWops) associated with your buffer.</li>
+<li>Create a SDL surface using the previous stream as a data source.</li>
+<li>Blit the surface wherever you want your frame to be.</li>
+<li>Flip the screen!</li>
+</ol>
+<p></p><!-- Crayon Syntax Highlighter v2.7.1 -->
+
+		<div id="crayon-589bc1cf5a8c1910243076" class="crayon-syntax crayon-theme-classic crayon-font-monaco crayon-os-pc print-yes notranslate" data-settings=" minimize scroll-mouseover" style=" margin-top: 12px; margin-bottom: 12px; font-size: 12px !important; line-height: 15px !important;">
+		
+			<div class="crayon-plain-wrap"><textarea wrap="soft" class="crayon-plain print-no" data-settings="dblclick" readonly style="-moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4; font-size: 12px !important; line-height: 15px !important;">
+// Initialise everything.
+SDL_Init(SDL_INIT_VIDEO);
+IMG_Init(IMG_INIT_JPG);
+
+// Get the screen's surface.
+SDL_Surface* screen = SDL_SetVideoMode(
+    format.fmt.pix.width,
+    format.fmt.pix.height,
+    32, SDL_HWSURFACE
+);
+
+SDL_RWops* buffer_stream;
+SDL_Surface* frame;
+SDL_Rect position = {.x = 0, .y = 0};
+
+// Create a stream based on our buffer.
+buffer_stream = SDL_RWFromMem(buffer_start, bufferinfo.length);
+
+// Create a surface using the data coming out of the above stream.
+frame = IMG_Load_RW(buffer_stream, 0);
+
+// Blit the surface and flip the screen.
+SDL_BlitSurface(frame, NULL, screen, &amp;position);
+SDL_Flip(screen);
+
+// Free everything, and unload SDL &amp; Co.
+SDL_FreeSurface(frame);
+SDL_RWclose(buffer_stream);
+IMG_Quit();
+SDL_Quit();</textarea></div>
+			<div class="crayon-main" style="">
+				<table class="crayon-table">
+					<tr class="crayon-row">
+				<td class="crayon-nums " data-settings="show">
+					<div class="crayon-nums-content" style="font-size: 12px !important; line-height: 15px !important;"><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-1">1</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-2">2</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-3">3</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-4">4</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-5">5</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-6">6</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-7">7</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-8">8</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-9">9</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-10">10</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-11">11</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-12">12</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-13">13</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-14">14</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-15">15</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-16">16</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-17">17</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-18">18</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-19">19</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-20">20</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-21">21</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-22">22</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-23">23</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-24">24</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-25">25</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-26">26</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-27">27</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-28">28</div><div class="crayon-num" data-line="crayon-589bc1cf5a8c1910243076-29">29</div><div class="crayon-num crayon-striped-num" data-line="crayon-589bc1cf5a8c1910243076-30">30</div></div>
+				</td>
+						<td class="crayon-code"><div class="crayon-pre" style="font-size: 12px !important; line-height: 15px !important; -moz-tab-size:4; -o-tab-size:4; -webkit-tab-size:4; tab-size:4;"><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-1"><span class="crayon-c">// Initialise everything.</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-2"><span class="crayon-e">SDL_Init</span><span class="crayon-sy">(</span><span class="crayon-v">SDL_INIT_VIDEO</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-3"><span class="crayon-e">IMG_Init</span><span class="crayon-sy">(</span><span class="crayon-v">IMG_INIT_JPG</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-4">&nbsp;</div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-5"><span class="crayon-c">// Get the screen's surface.</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-6"><span class="crayon-e ">SDL_Surface*</span><span class="crayon-h"> </span><span class="crayon-v">screen</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-e">SDL_SetVideoMode</span><span class="crayon-sy">(</span></div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-7"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">format</span><span class="crayon-sy">.</span><span class="crayon-v">fmt</span><span class="crayon-sy">.</span><span class="crayon-v">pix</span><span class="crayon-sy">.</span><span class="crayon-v">width</span><span class="crayon-sy">,</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-8"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-v">format</span><span class="crayon-sy">.</span><span class="crayon-v">fmt</span><span class="crayon-sy">.</span><span class="crayon-v">pix</span><span class="crayon-sy">.</span><span class="crayon-v">height</span><span class="crayon-sy">,</span></div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-9"><span class="crayon-h">&nbsp;&nbsp;&nbsp;&nbsp;</span><span class="crayon-cn">32</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">SDL</span><span class="crayon-sy">_</span>HWSURFACE</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-10"><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-11">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-12"><span class="crayon-e ">SDL_RWops*</span><span class="crayon-h"> </span><span class="crayon-v">buffer_stream</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-13"><span class="crayon-e ">SDL_Surface*</span><span class="crayon-h"> </span><span class="crayon-v">frame</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-14"><span class="crayon-e">SDL_Rect </span><span class="crayon-v">position</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-sy">{</span><span class="crayon-sy">.</span><span class="crayon-v">x</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-sy">.</span><span class="crayon-v">y</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">}</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-15">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-16"><span class="crayon-c">// Create a stream based on our buffer.</span></div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-17"><span class="crayon-v">buffer_stream</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-e">SDL_RWFromMem</span><span class="crayon-sy">(</span><span class="crayon-v">buffer_start</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">bufferinfo</span><span class="crayon-sy">.</span><span class="crayon-v">length</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-18">&nbsp;</div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-19"><span class="crayon-c">// Create a surface using the data coming out of the above stream.</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-20"><span class="crayon-v">frame</span><span class="crayon-h"> </span><span class="crayon-o">=</span><span class="crayon-h"> </span><span class="crayon-e">IMG_Load_RW</span><span class="crayon-sy">(</span><span class="crayon-v">buffer_stream</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-cn">0</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-21">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-22"><span class="crayon-c">// Blit the surface and flip the screen.</span></div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-23"><span class="crayon-e">SDL_BlitSurface</span><span class="crayon-sy">(</span><span class="crayon-v">frame</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-t">NULL</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-v">screen</span><span class="crayon-sy">,</span><span class="crayon-h"> </span><span class="crayon-o">&amp;</span><span class="crayon-v">position</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-24"><span class="crayon-e">SDL_Flip</span><span class="crayon-sy">(</span><span class="crayon-v">screen</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-25">&nbsp;</div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-26"><span class="crayon-c">// Free everything, and unload SDL &amp; Co.</span></div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-27"><span class="crayon-e">SDL_FreeSurface</span><span class="crayon-sy">(</span><span class="crayon-v">frame</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-28"><span class="crayon-e">SDL_RWclose</span><span class="crayon-sy">(</span><span class="crayon-v">buffer_stream</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line" id="crayon-589bc1cf5a8c1910243076-29"><span class="crayon-e">IMG_Quit</span><span class="crayon-sy">(</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div><div class="crayon-line crayon-striped-line" id="crayon-589bc1cf5a8c1910243076-30"><span class="crayon-e">SDL_Quit</span><span class="crayon-sy">(</span><span class="crayon-sy">)</span><span class="crayon-sy">;</span></div></div></td>
+					</tr>
+				</table>
+			</div>
+		</div>
+<!-- [Format Time: 0.0035 seconds] -->
+<p>And there you go, don&#8217;t forget your <em>-lSDL </em>and <em>-lSDL_Image</em> switches so that your link editor succeeds. You should now be able to see an SDL window with your frame in it. Add some loops in your code, and you&#8217;ll build yourself a simple camera streamer! If you need more information about this API/framework, <a title="LinuxTV V4L API" href="http://linuxtv.org/downloads/v4l-dvb-apis/" target="_blank">here is a link to the documentation I used</a> to write this article. Don&#8217;t hesitate to go through it if you have time!</p>
+<p>Any way, that&#8217;s pretty much all I wanted to cover today. See you later!</p>
+								
+																
+							</div><!-- .entry-content -->
+
+							<div class="entry-meta"><span class="post_tag"><span class="before">Tags: </span><a href="https://jwhsmith.net/tag/c/" rel="tag">c</a>, <a href="https://jwhsmith.net/tag/capture/" rel="tag">capture</a>, <a href="https://jwhsmith.net/tag/linux/" rel="tag">linux</a>, <a href="https://jwhsmith.net/tag/sdl/" rel="tag">sdl</a>, <a href="https://jwhsmith.net/tag/v4l2/" rel="tag">v4l2</a>, <a href="https://jwhsmith.net/tag/webcam/" rel="tag">webcam</a></span></div>
+													
+						</div><!-- .post-content -->
+
+					</div><!-- .hentry -->
+
+					
+					
+					
+					
+<div id="comments-template">
+
+	<div class="comments-wrap">
+
+		<div id="comments">
+
+			
+				<h3 id="comments-number" class="comments-header block-title"><span>16 Responses</span></h3>
+
+				
+				<ol class="comment-list">
+					
+	<li id="comment-9359" class="comment even thread-even depth-1 reader has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<a href="http://none" rel="external nofollow" title="Jorge González"><img alt='Jorge González' src='https://secure.gravatar.com/avatar/86fe3dc050edc3a7f714f24eae817826?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/86fe3dc050edc3a7f714f24eae817826?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' /></a>
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn" title="http://none"><a href="http://none" title="Jorge González" class="url" rel="external nofollow">Jorge González</a></cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2015-04-11T04:01:12+00:00" title="Saturday, April 11th, 2015, 4:01 am">April 11, 2015</time> at <time class="comment-time" title="Saturday, April 11th, 2015, 4:01 am">4:01 am</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-9359' onclick='return addComment.moveForm( "comment-9359", "9359", "respond", "212" )' aria-label='Reply to Jorge González'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>Absolutely brilliant, works perfect on the raspbian in the raspberry pi 2. Thanks for the post.</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	</li><!-- .comment -->
+	<li id="comment-10117" class="comment odd alt thread-odd thread-alt depth-1 reader has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<a href="http://yosemitefoothills.com" rel="external nofollow" title="Craig Van Degrift"><img alt='Craig Van Degrift' src='https://secure.gravatar.com/avatar/2ceb04c11284fac54fbc71dfe71a1a6b?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/2ceb04c11284fac54fbc71dfe71a1a6b?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' /></a>
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn" title="http://yosemitefoothills.com"><a href="http://yosemitefoothills.com" title="Craig Van Degrift" class="url" rel="external nofollow">Craig Van Degrift</a></cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2015-08-04T07:29:16+00:00" title="Tuesday, August 4th, 2015, 7:29 am">August 4, 2015</time> at <time class="comment-time" title="Tuesday, August 4th, 2015, 7:29 am">7:29 am</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-10117' onclick='return addComment.moveForm( "comment-10117", "10117", "respond", "212" )' aria-label='Reply to Craig Van Degrift'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>I found this article extremely enlightening.  Thank you.  This well-annotated example code is just what I needed to get a hang of how to use v4l2.  As you state, there are too few such examples available.  I do, however, have a few suggestions:</p>
+<p>Adding the necessary includes would be useful to your target audience.</p>
+<p>Using &#8220;cap&#8221; rather than &#8220;capabilities&#8221; in &#8220;Retrieve Device&#8217;s Capabilities&#8221; would make it consistent with the subsequent section.</p>
+<p>if(cap.capabilities &amp; V4L2_CAP_VIDEO_CAPTURE) needs to be<br />
+if(!(cap.capabilities &amp; V4L2_CAP_VIDEO_CAPTURE)) or an equivalent fix.</p>
+<p>Also, I found that I needed to do an initial ioctl(fd, VIDIOC_QBUF, &amp;bufferinfo) before the ioctl(fd, VIDIOC_STREAMON, &amp;type).  Otherwise, I get a &#8220;VIDIOC_STREAMON: Operation not permitted&#8221; error.  It then appears the the order of QBUF and DQBUF in the loop needs to be reversed.  (I suppose there is a better way that doesn&#8217;t do the QBUF ioctl in two different places.)</p>
+<p>I am using the Raspbian system on a Raspberry Pi 2.  Maybe that makes a difference.</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	<ol class="children">
+
+	<li id="comment-10120" class="comment byuser comment-author-jwhsmith bypostauthor even depth-2 role-administrator user-jwhsmith entry-author has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<a href="http://www.jwhsmith.net" rel="external nofollow" title="John WH Smith"><img alt='John WH Smith' src='https://secure.gravatar.com/avatar/6ccebffcaee9d51748908bb6e5a3adc2?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/6ccebffcaee9d51748908bb6e5a3adc2?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' /></a>
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn" title="http://www.jwhsmith.net"><a href="http://www.jwhsmith.net" title="John WH Smith" class="url" rel="external nofollow">John WH Smith</a></cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2015-08-04T14:17:08+00:00" title="Tuesday, August 4th, 2015, 2:17 pm">August 4, 2015</time> at <time class="comment-time" title="Tuesday, August 4th, 2015, 2:17 pm">2:17 pm</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-10120' onclick='return addComment.moveForm( "comment-10120", "10120", "respond", "212" )' aria-label='Reply to John WH Smith'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>I brought a few edits, thanks !</p>
+<p>I have chosen not to add the includes since I believe they would make the code samples much heavier. I am not really targetting a copy/paste audience: the code samples I give are illustrative, but purposedly not self-sufficient. The article describes a method, a way to do things, but my readers should remember the rule of diversity, and &#8220;distrust all claims for one true way&#8221;.</p>
+<p>Concerning the QBUF and STREAMON ioctls, I&#8217;m afraid I cannot agree. The QBUF and DQBUF calls are related to the streaming mechanism. Streaming mode needs to be activated before the process starts queueing and dequeuing buffers, since that&#8217;s exactly what streaming is. Additionnaly, streaming does not need to be switched on for every buffer, that would make an unecessary ioctl call which could be disturbing since we&#8217;re capturing continuous video frames. Depending on your device, your camera might not be able to handle streaming the way it was described in this article, in which case you&#8217;d have to refer to the documentation in order to use the QBUF and DQBUF ioctls another way (through simple memory mapping) 😉</p>
+<p>Thank you for your input!</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	<ol class="children">
+
+	<li id="comment-10122" class="comment odd alt depth-3 reader has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<a href="http://yosemitefoothills.com" rel="external nofollow" title="Craig Van Degrift"><img alt='Craig Van Degrift' src='https://secure.gravatar.com/avatar/2ceb04c11284fac54fbc71dfe71a1a6b?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/2ceb04c11284fac54fbc71dfe71a1a6b?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' /></a>
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn" title="http://yosemitefoothills.com"><a href="http://yosemitefoothills.com" title="Craig Van Degrift" class="url" rel="external nofollow">Craig Van Degrift</a></cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2015-08-05T04:25:03+00:00" title="Wednesday, August 5th, 2015, 4:25 am">August 5, 2015</time> at <time class="comment-time" title="Wednesday, August 5th, 2015, 4:25 am">4:25 am</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-10122' onclick='return addComment.moveForm( "comment-10122", "10122", "respond", "212" )' aria-label='Reply to Craig Van Degrift'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>Another site I checked had the following example code (without much annotation):<br />
+<a href="http://linuxtv.org/downloads/v4l-dvb-apis/capture-example.html" rel="nofollow">http://linuxtv.org/downloads/v4l-dvb-apis/capture-example.html</a><br />
+It is there that I saw that the QBUF was first called on each of its buffers in its start_capturing() routine before STREAMON was called.  Its main_loop()-&gt;read_frame() routine then calls DQBUF followed by QBUF in that order.  That program worked directly without modification on my Raspberry Pi 2.</p>
+<p>That site seems authoritative with respect to v4l2 as of December, 2014, as evident in<br />
+<a href="http://linuxtv.org/downloads/v4l-dvb-apis/v4l2spec.html" rel="nofollow">http://linuxtv.org/downloads/v4l-dvb-apis/v4l2spec.html</a><br />
+where the specs seem nearly current.  I am hoping that the solution is some overlooked setting in QUERYBUF since what you do seems more reasonable.</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	<ol class="children">
+
+	<li id="comment-10125" class="comment byuser comment-author-jwhsmith bypostauthor even depth-4 role-administrator user-jwhsmith entry-author has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<a href="http://www.jwhsmith.net" rel="external nofollow" title="John WH Smith"><img alt='John WH Smith' src='https://secure.gravatar.com/avatar/6ccebffcaee9d51748908bb6e5a3adc2?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/6ccebffcaee9d51748908bb6e5a3adc2?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' /></a>
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn" title="http://www.jwhsmith.net"><a href="http://www.jwhsmith.net" title="John WH Smith" class="url" rel="external nofollow">John WH Smith</a></cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2015-08-05T14:03:55+00:00" title="Wednesday, August 5th, 2015, 2:03 pm">August 5, 2015</time> at <time class="comment-time" title="Wednesday, August 5th, 2015, 2:03 pm">2:03 pm</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-10125' onclick='return addComment.moveForm( "comment-10125", "10125", "respond", "212" )' aria-label='Reply to John WH Smith'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>Oh, I see the difference you&#8217;re referring to. The mechanism is almost identical, but an extra call to QBUF is made before the streaming capability is activated. Now, since QBUF is called again every time a frame is captured (dequeued), you can see that the &#8220;main loop&#8221; remains pretty much the same:</p>
+<p>&#8211; In your example: Queue once, stream on, dequeue/queue in a loop, end (stream off).<br />
+&#8211; In this article: Stream on, queue/dequeue in a loop, end (stream off).</p>
+<p>Now in my opinion, the second makes more sense because the process will exit its loop without any buffer queued in the driver. From my point of view, this allows cleaner termination of the capturing process. It might also prevent some error cases: if STREAMON fails, the process exits without any buffer queued and waiting.</p>
+<p>However, it seems (from your attempts) that this routine isn&#8217;t really accepted by all devices. My own camera will capture frames whether I queue the buffers before STREAMON or after (in the loop). I believe this is the case for a lot of devices, since most of the (few) references I could find (from users) are written this way. I will however bring an edit to my article, in case another reader is in your case 😉 Thank you again!</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	</li><!-- .comment --></ol><!-- .children -->
+</li><!-- .comment --></ol><!-- .children -->
+</li><!-- .comment --></ol><!-- .children -->
+</li><!-- .comment -->
+	<li id="comment-10891" class="comment odd alt thread-even depth-1 reader has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<img alt='Paco V.' src='https://secure.gravatar.com/avatar/5527f7a33c3f3cf77e79d6772f7b7b0d?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/5527f7a33c3f3cf77e79d6772f7b7b0d?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' />
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn">Paco V.</cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2016-03-10T21:10:15+00:00" title="Thursday, March 10th, 2016, 9:10 pm">March 10, 2016</time> at <time class="comment-time" title="Thursday, March 10th, 2016, 9:10 pm">9:10 pm</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-10891' onclick='return addComment.moveForm( "comment-10891", "10891", "respond", "212" )' aria-label='Reply to Paco V.'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>Hi all!</p>
+<p>I&#8217;d really thank both of you, John and Craig.<br />
+This article is crystal clear and Craig&#8217;s comments solved my issue!</p>
+<p>Regards.<br />
+Paco V.</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	</li><!-- .comment -->
+	<li id="comment-11023" class="comment even thread-odd thread-alt depth-1 reader has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<img alt='ssinfod' src='https://secure.gravatar.com/avatar/ed1304f2b38375e0c70f9a73b6b08eea?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/ed1304f2b38375e0c70f9a73b6b08eea?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' />
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn">ssinfod</cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2016-04-12T04:35:09+00:00" title="Tuesday, April 12th, 2016, 4:35 am">April 12, 2016</time> at <time class="comment-time" title="Tuesday, April 12th, 2016, 4:35 am">4:35 am</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-11023' onclick='return addComment.moveForm( "comment-11023", "11023", "respond", "212" )' aria-label='Reply to ssinfod'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>Hello, </p>
+<p>I think you should change the following lines from:<br />
+  struct v4l2_capability capabilities;<br />
+  if(ioctl(fd, VIDIOC_QUERYCAP, &amp;capabilities) &lt; 0){<br />
+      perror(&quot;VIDIOC_QUERYCAP&quot;);<br />
+      exit(1);<br />
+  }<br />
+to:<br />
+  struct v4l2_capability cap;<br />
+  if(ioctl(fd, VIDIOC_QUERYCAP, &amp;cap) &lt; 0){<br />
+      perror(&quot;VIDIOC_QUERYCAP&quot;);<br />
+      exit(1);<br />
+  }</p>
+<p>I would be more consistent with the rest of the snippets.</p>
+<p>Also, there is a small typo in this sentence: &quot;This is the part of the code you might want to put is a temporised loop.&quot;</p>
+<p>I think you mean &quot;in a temporised loop&quot;  (not is).</p>
+<p>Otherwise this is very great article.</p>
+<p>thanks.</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	<ol class="children">
+
+	<li id="comment-11030" class="comment byuser comment-author-jwhsmith bypostauthor odd alt depth-2 role-administrator user-jwhsmith entry-author has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<a href="https://www.jwhsmith.net" rel="external nofollow" title="John WH Smith"><img alt='John WH Smith' src='https://secure.gravatar.com/avatar/6ccebffcaee9d51748908bb6e5a3adc2?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/6ccebffcaee9d51748908bb6e5a3adc2?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' /></a>
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn" title="https://www.jwhsmith.net"><a href="https://www.jwhsmith.net" title="John WH Smith" class="url" rel="external nofollow">John WH Smith</a></cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2016-04-14T01:17:18+00:00" title="Thursday, April 14th, 2016, 1:17 am">April 14, 2016</time> at <time class="comment-time" title="Thursday, April 14th, 2016, 1:17 am">1:17 am</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-11030' onclick='return addComment.moveForm( "comment-11030", "11030", "respond", "212" )' aria-label='Reply to John WH Smith'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>Hey ssinfod, thanks for your comment!<br />
+I&#8217;ve brought the edits you suggested.</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	</li><!-- .comment --></ol><!-- .children -->
+</li><!-- .comment -->
+	<li id="comment-11238" class="comment even thread-even depth-1 reader has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<img alt='jtorniainen' src='https://secure.gravatar.com/avatar/fc32688888c9799a0c67fe11657b5528?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/fc32688888c9799a0c67fe11657b5528?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' />
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn">jtorniainen</cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2016-06-01T11:10:43+00:00" title="Wednesday, June 1st, 2016, 11:10 am">June 1, 2016</time> at <time class="comment-time" title="Wednesday, June 1st, 2016, 11:10 am">11:10 am</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-11238' onclick='return addComment.moveForm( "comment-11238", "11238", "respond", "212" )' aria-label='Reply to jtorniainen'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>Great write-up. I think though that in the last code block (on line 20) the variable should be &#8216;frame&#8217; instead of &#8216;picture&#8217; as &#8216;picture&#8217; variable has not been initialized.</p>
+<p>20: picture = IMG_Load_RW(buffer_stream);</p>
+<p>I also had to add &#8216;0&#8217; as a second argument to the IMG_Load_RW call but this might be related to my version of the SDL-library</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	<ol class="children">
+
+	<li id="comment-11239" class="comment byuser comment-author-jwhsmith bypostauthor odd alt depth-2 role-administrator user-jwhsmith entry-author has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<a href="https://www.jwhsmith.net" rel="external nofollow" title="John WH Smith"><img alt='John WH Smith' src='https://secure.gravatar.com/avatar/6ccebffcaee9d51748908bb6e5a3adc2?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/6ccebffcaee9d51748908bb6e5a3adc2?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' /></a>
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn" title="https://www.jwhsmith.net"><a href="https://www.jwhsmith.net" title="John WH Smith" class="url" rel="external nofollow">John WH Smith</a></cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2016-06-01T11:51:24+00:00" title="Wednesday, June 1st, 2016, 11:51 am">June 1, 2016</time> at <time class="comment-time" title="Wednesday, June 1st, 2016, 11:51 am">11:51 am</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-11239' onclick='return addComment.moveForm( "comment-11239", "11239", "respond", "212" )' aria-label='Reply to John WH Smith'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>Article edited, thanks! The frame thing was a mistake of mine, I&#8217;ve done way to much copy/pasting for that one&#8230; :s<br />
+As for IMG_Load_RW it seems SDL 1.2.8 has a second argument, yes. I have no idea when it happenned though&#8230;</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	</li><!-- .comment --></ol><!-- .children -->
+</li><!-- .comment -->
+	<li id="comment-11304" class="comment even thread-odd thread-alt depth-1 reader has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<img alt='Chris' src='https://secure.gravatar.com/avatar/903f06cffb4c88942cdaf62b594e5c31?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/903f06cffb4c88942cdaf62b594e5c31?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' />
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn">Chris</cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2016-06-24T17:53:11+00:00" title="Friday, June 24th, 2016, 5:53 pm">June 24, 2016</time> at <time class="comment-time" title="Friday, June 24th, 2016, 5:53 pm">5:53 pm</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-11304' onclick='return addComment.moveForm( "comment-11304", "11304", "respond", "212" )' aria-label='Reply to Chris'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>Hi thanks for the info, I&#8217;ve been looking for a good tutorial on how to use V4L2. I have however encountered problems with regards to getting external USB webcams to work, was wondering if you could help me? I launched a question at StackOverflow here: <a href="http://stackoverflow.com/questions/38018360/v4l2-not-working-for-usb-camera-but-works-with-laptop-webcam" rel="nofollow">http://stackoverflow.com/questions/38018360/v4l2-not-working-for-usb-camera-but-works-with-laptop-webcam</a></p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	</li><!-- .comment -->
+	<li id="comment-11321" class="comment odd alt thread-even depth-1 reader has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<img alt='davittarius' src='https://secure.gravatar.com/avatar/0ca685c4975610afa84d23efac39f852?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/0ca685c4975610afa84d23efac39f852?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' />
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn">davittarius</cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2016-06-28T15:27:38+00:00" title="Tuesday, June 28th, 2016, 3:27 pm">June 28, 2016</time> at <time class="comment-time" title="Tuesday, June 28th, 2016, 3:27 pm">3:27 pm</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-11321' onclick='return addComment.moveForm( "comment-11321", "11321", "respond", "212" )' aria-label='Reply to davittarius'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>Very useful article. Thanks a lot!</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	</li><!-- .comment -->
+	<li id="comment-11359" class="comment even thread-odd thread-alt depth-1 reader has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<img alt='wcdr' src='https://secure.gravatar.com/avatar/1e1e501468483efb26e875d32fd76269?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/1e1e501468483efb26e875d32fd76269?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' />
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn">wcdr</cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2016-07-13T20:14:24+00:00" title="Wednesday, July 13th, 2016, 8:14 pm">July 13, 2016</time> at <time class="comment-time" title="Wednesday, July 13th, 2016, 8:14 pm">8:14 pm</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-11359' onclick='return addComment.moveForm( "comment-11359", "11359", "respond", "212" )' aria-label='Reply to wcdr'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>Hi thanks, your article.</p>
+<p>I have a question i can query device for supported setting, but when i try to set it for example brightness i have an error : Request or argp is not valid !</p>
+<p>I try to add a mutex to ensure ioctl request is not overlapped, but it don&#8217;t work.</p>
+<p>Before starting acquisition VIDIOC_G_CTRL work but after VIDIOC_G_CTRL or VIDIOC_S_CTRL don&#8217;t work with this error.</p>
+<p>Do you known how change setting during acquisition or do i need to stop acquisition before changing something and restart it after ?</p>
+<p>Thanks for your help.</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	</li><!-- .comment -->
+	<li id="comment-11765" class="comment odd alt thread-even depth-1 reader has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<img alt='David' src='https://secure.gravatar.com/avatar/59e4c9bac3d8d7472759b209522af939?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/59e4c9bac3d8d7472759b209522af939?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' />
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn">David</cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2016-12-03T16:00:19+00:00" title="Saturday, December 3rd, 2016, 4:00 pm">December 3, 2016</time> at <time class="comment-time" title="Saturday, December 3rd, 2016, 4:00 pm">4:00 pm</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-11765' onclick='return addComment.moveForm( "comment-11765", "11765", "respond", "212" )' aria-label='Reply to David'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>Thank you for your post. I agree that adding all of the dependencies to your code examples would have obscured the simple concepts that you were attempting to portray.</p>
+<p>For those looking for a working example, I found the following quite useful:<br />
+<a href="https://github.com/twam/v4l2grab" rel="nofollow">https://github.com/twam/v4l2grab</a></p>
+<p>Cheers!</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	<ol class="children">
+
+	<li id="comment-11832" class="comment byuser comment-author-jwhsmith bypostauthor even depth-2 role-administrator user-jwhsmith entry-author has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<a href="https://www.jwhsmith.net" rel="external nofollow" title="John WH Smith"><img alt='John WH Smith' src='https://secure.gravatar.com/avatar/6ccebffcaee9d51748908bb6e5a3adc2?s=50&#038;d=mm&#038;r=g' srcset='https://secure.gravatar.com/avatar/6ccebffcaee9d51748908bb6e5a3adc2?s=100&amp;d=mm&amp;r=g 2x' class='avatar avatar-50 photo' height='50' width='50' /></a>
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn" title="https://www.jwhsmith.net"><a href="https://www.jwhsmith.net" title="John WH Smith" class="url" rel="external nofollow">John WH Smith</a></cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2016-12-24T13:48:08+00:00" title="Saturday, December 24th, 2016, 1:48 pm">December 24, 2016</time> at <time class="comment-time" title="Saturday, December 24th, 2016, 1:48 pm">1:48 pm</time></span>  &middot; <a rel='nofollow' class='comment-reply-link' href='#comment-11832' onclick='return addComment.moveForm( "comment-11832", "11832", "respond", "212" )' aria-label='Reply to John WH Smith'>Reply</a> &rarr;</div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>Thanks for the link! The main V4L2 includes are indeed <code>linux/videodev2.h</code> and <code>libv4l2.h</code>.</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	</li><!-- .comment --></ol><!-- .children -->
+</li><!-- .comment -->
+	<li id="comment-11830" class="pingback odd alt thread-odd thread-alt depth-1 ping reader has-avatar">
+
+		
+		<div class="comment-wrap">
+
+			
+			<a href="http://manmade2.com/simple-home-surveillance-with-opencv-c-and-raspberry-pi/" rel="external nofollow" title="Simple Home-Surveillance with OpenCV,&nbsp;C++&nbsp;and Raspberry Pi &#8211; man made machines"><img alt='Simple Home-Surveillance with OpenCV,&nbsp;C++&nbsp;and Raspberry Pi &#8211; man made machines' src='https://secure.gravatar.com/avatar/?s=50&#038;d=https%3A%2F%2Fjwhsmith.net%2Fwp-content%2Fthemes%2Forigin%2Flibrary%2Fimages%2Fping.png&#038;r=g' srcset='https://secure.gravatar.com/avatar/?s=100&amp;d=https%3A%2F%2Fjwhsmith.net%2Fwp-content%2Fthemes%2Forigin%2Flibrary%2Fimages%2Fping.png&amp;r=g 2x' class='avatar avatar-50 photo avatar-default' height='50' width='50' /></a>
+			<div class="comment-meta"><span class="comment-author vcard"><cite class="fn" title="http://manmade2.com/simple-home-surveillance-with-opencv-c-and-raspberry-pi/"><a href="http://manmade2.com/simple-home-surveillance-with-opencv-c-and-raspberry-pi/" title="Simple Home-Surveillance with OpenCV,&nbsp;C++&nbsp;and Raspberry Pi &#8211; man made machines" class="url" rel="external nofollow">Simple Home-Surveillance with OpenCV,&nbsp;C++&nbsp;and Raspberry Pi &#8211; man made machines</a></cite></span><!-- .comment-author .vcard --> <span class="published"><time class="comment-date" datetime="2016-12-24T09:38:36+00:00" title="Saturday, December 24th, 2016, 9:38 am">December 24, 2016</time> at <time class="comment-time" title="Saturday, December 24th, 2016, 9:38 am">9:38 am</time></span>  &middot; </div>
+			<div class="comment-content comment-text">
+				
+				
+				<p>[&#8230;] There are several ways to get video streaming with C/C++, such as importing and using on Linux the native functions ioctl and video-for-Linux  v4l (see e.g. the great post of JWH Smith). [&#8230;]</p>
+			</div><!-- .comment-content .comment-text -->
+
+			
+		</div><!-- .comment-wrap -->
+
+		
+	</li><!-- .comment -->				</ol><!-- .comment-list -->
+
+				
+				
+			
+			
+		</div><!-- #comments -->
+
+			<div id="respond" class="comment-respond">
+		<h3 id="reply-title" class="comment-reply-title">Leave a Reply <small><a rel="nofollow" id="cancel-comment-reply-link" href="/2014/12/capturing-a-webcam-stream-using-v4l2/#respond" style="display:none;">Click here to cancel reply.</a></small></h3>			<form action="https://jwhsmith.net/wp-comments-post.php" method="post" id="commentform" class="comment-form">
+				<p class="form-textarea req"><!--<label for="comment">Comment</label>--><textarea name="comment" id="comment" cols="60" rows="10"></textarea></p><p class="form-author req"><input type="text" class="text-input" name="author" id="author" value="" size="40" /><label for="author">Name <span class="required">*</span> </label></p>
+<p class="form-email req"><input type="text" class="text-input" name="email" id="email" value="" size="40" /><label for="email">Email <span class="required">*</span> </label></p>
+<p class="form-url"><input type="text" class="text-input" name="url" id="url" value="" size="40" /><label for="url">Website</label></p>
+<p class="form-submit"><input name="submit" type="submit" id="submit" class="submit" value="Post Comment &rarr;" /> <input type='hidden' name='comment_post_ID' value='212' id='comment_post_ID' />
+<input type='hidden' name='comment_parent' id='comment_parent' value='0' />
+</p><p style="display: none;"><input type="hidden" id="akismet_comment_nonce" name="akismet_comment_nonce" value="2f5ba14815" /></p><p style="display: none;"><input type="hidden" id="ak_js" name="ak_js" value="185"/></p>			</form>
+			</div><!-- #respond -->
+	
+	</div><!-- .comments-wrap -->
+
+</div><!-- #comments-template -->
+				
+			
+		</div><!-- .hfeed -->
+
+		
+		
+	
+		<div class="loop-nav">
+			<div class="previous">&larr; <a href="https://jwhsmith.net/2014/10/tracing-linux-system-calls/" rel="prev">Tracing the Linux system calls</a></div>			<div class="next"><a href="https://jwhsmith.net/2015/02/manipulating-rfkill-using-devices-programmatically/" rel="next">Manipulating rfkill-using devices programmatically</a> &rarr;</div>		</div><!-- .loop-nav -->
+
+	
+	</div><!-- #content -->
+
+	
+				
+	
+	<div id="sidebar-primary" class="sidebar">
+
+		
+		<section id="text-2" class="widget widget_text widget-widget_text"><h3 class="widget-title">Welcome!</h3>			<div class="textwidget">Well, looks simple doesn't it? That's how I like it. On this blog, I'll publish technical - nerdy - contents about my latest discoveries and fascinations. You'll find out I'm quite the passionate guy in my field, yet I hope you'll like it as much as I do!</div>
+		</section><section id="hybrid-search-2" class="widget search widget-search"><h3 class="widget-title">Search</h3><form method="get" class="search-form" id="search-formhybrid-search" action="https://jwhsmith.net/"><div><input class="search-text" type="text" name="s" id="search-texthybrid-search" value="Search the blog..." onfocus="if(this.value==this.defaultValue)this.value='';" onblur="if(this.value=='')this.value=this.defaultValue;" /><input class="search-submit button" name="submit" type="submit" id="search-submithybrid-search" value="Go!" /></div></form></section><section id="quotescollection-2" class="widget widget_quotescollection widget-widget_quotescollection"><h3 class="widget-title">Random Line</h3>
+<div class="quotescollection-quote" id="w_quotescollection_2"><p>It has long been an axiom of mine that the little things are infinitely the most important.</p>
+<footer class="attribution">&mdash;&nbsp;<cite class="author">Arthur Conan Doyle (Sherlock Holmes)</cite>, <cite class="title source">A Case of Identity</cite></footer></div></section>		<section id="recent-posts-2" class="widget widget_recent_entries widget-widget_recent_entries">		<h3 class="widget-title">Recent Posts</h3>		<ul>
+					<li>
+				<a href="https://jwhsmith.net/2015/02/manipulating-rfkill-using-devices-programmatically/">Manipulating rfkill-using devices programmatically</a>
+						</li>
+					<li>
+				<a href="https://jwhsmith.net/2014/12/capturing-a-webcam-stream-using-v4l2/">Capturing a webcam stream using v4l2</a>
+						</li>
+					<li>
+				<a href="https://jwhsmith.net/2014/10/tracing-linux-system-calls/">Tracing the Linux system calls</a>
+						</li>
+					<li>
+				<a href="https://jwhsmith.net/2014/10/unix-child-processes-upon-parent-termination/">UNIX: child processes upon parent termination</a>
+						</li>
+					<li>
+				<a href="https://jwhsmith.net/2014/07/3-book-recommendations/">3 book recommendations : Linux development</a>
+						</li>
+				</ul>
+		</section>		<section id="hybrid-pages-2" class="widget pages widget-pages"><h3 class="widget-title">Pages</h3><ul class="xoxo pages"><li class="page_item page-item-12"><a href="https://jwhsmith.net/about-me/">About me</a></li><li class="page_item page-item-21"><a href="https://jwhsmith.net/contact/">Contact</a></li></ul></section><section id="linkcat-9" class="linkcat widget bookmarks widget-bookmarks"><h3 class="widget-title">Stack Exchange</h3><ul class='xoxo blogroll'><li><a href="https://serverfault.com/users/181549/john-wh-smith" rel="me" title="Server Fault account" target="_blank">Server Fault</a></li><li><a href="https://stackoverflow.com/users/2228310/john-wh-smith" rel="me" title="Stack Overflow account" target="_blank">Stack Overflow</a></li><li><a href="https://unix.stackexchange.com/users/41892/john-wh-smith" rel="me" title="Unix &amp; Linux account" target="_blank">Unix &amp; Linux</a></li></ul></section>
+		
+	</div><!-- #sidebar-primary .aside -->
+
+	
+
+				
+		</div><!-- #main -->
+
+		
+				
+
+		
+		<div id="footer">
+
+			
+			<div class="footer-content">
+				
+				<p class="copyright">Copyright © 2017 <a class="site-link" href="https://jwhsmith.net" title="JWH Smith" rel="home"><span>JWH Smith</span></a></p>
+
+<p class="credit">Powered by <a class="wp-link" href="http://wordpress.org" title="State-of-the-art semantic personal publishing platform"><span>WordPress</span></a> and <a class="theme-link" href="http://alienwp.com/themes/origin/" title="Origin WordPress Theme"><span>Origin</span></a></p>
+
+<p class="credit"><a href="https://letsencrypt.org/" target="_blank">See here</a> for more information about the Let's Encrypt initiative.</p>
+				
+			</div>
+
+			
+		</div><!-- #footer -->
+
+				
+		</div><!-- .wrap -->
+
+	</div><!-- #container -->
+
+	
+	<!-- Piwik -->
+<script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u="//piwik.jwhsmith.net/";
+    _paq.push(['setTrackerUrl', u+'piwik.php']);
+    _paq.push(['setSiteId', '1']);
+    var d=document, g=d.createElement('script'), s=d.getElementsByTagName('script')[0];
+    g.type='text/javascript'; g.async=true; g.defer=true; g.src=u+'piwik.js'; s.parentNode.insertBefore(g,s);
+  })();
+</script>
+<!-- End Piwik Code -->
+<noscript><p><img src="//piwik.jwhsmith.net/piwik.php?idsite=1" style="border:0;" alt="" /></p></noscript>
+<script type='text/javascript' src='https://jwhsmith.net/wp-content/plugins/akismet/_inc/form.js?ver=3.2'></script>
+<script type='text/javascript' src='https://jwhsmith.net/wp-content/plugins/contact-form-7/includes/js/jquery.form.min.js?ver=3.51.0-2014.06.20'></script>
+<script type='text/javascript'>
+/* <![CDATA[ */
+var _wpcf7 = {"recaptcha":{"messages":{"empty":"Please verify that you are not a robot."}}};
+/* ]]> */
+</script>
+<script type='text/javascript' src='https://jwhsmith.net/wp-content/plugins/contact-form-7/includes/js/scripts.js?ver=4.6'></script>
+<script type='text/javascript' src='https://jwhsmith.net/wp-content/themes/origin/js/fancybox/jquery.fancybox-1.3.4.pack.js?ver=1.0'></script>
+<script type='text/javascript' src='https://jwhsmith.net/wp-content/themes/origin/js/fitvids/jquery.fitvids.js?ver=1.0'></script>
+<script type='text/javascript' src='https://jwhsmith.net/wp-content/themes/origin/js/footer-scripts.js?ver=1.0'></script>
+<script type='text/javascript' src='https://jwhsmith.net/wp-content/themes/origin/js/navigation.js?ver=20130228'></script>
+<script type='text/javascript' src='https://jwhsmith.net/wp-includes/js/comment-reply.min.js?ver=4.7.2'></script>
+<script type='text/javascript' src='https://jwhsmith.net/wp-content/themes/origin/library/js/drop-downs.min.js?ver=20130805'></script>
+<script type='text/javascript' src='https://jwhsmith.net/wp-includes/js/wp-embed.min.js?ver=4.7.2'></script>
+	
+</body>
+</html>
