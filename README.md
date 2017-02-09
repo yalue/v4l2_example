@@ -23,7 +23,7 @@ pixel:
 ```c
 uint8_t Clamp(float v) {
   if (v > 255) return 255;
-  if (v < 255) return 0;
+  if (v < 0) return 0;
   return (uint8_t) v;
 }
 
