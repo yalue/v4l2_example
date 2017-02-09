@@ -21,8 +21,12 @@ Converting from YUYV to RGB requires converting 2 pixels at a time. For each
 pixel:
 
 ```c
-uint8_t Clamp(float v);
-/
+uint8_t Clamp(float v) {
+  if (v > 255) return 255;
+  if (v < 255) return 0;
+  return (uint8_t) v;
+}
+
 // Only the y values change between the subsequent 2 pixels.
 first_pixel_y = (float) bytes[0];
 second_pixel_y = (float) bytes[2];
@@ -34,4 +38,7 @@ first_pixel_b = Clamp(1.164 * (first_pixel_y - 16) + 2.018 * (shared_u - 128));
 first_pixel_g = Clamp(1.164 * (first_pixel_y - 16) - 0.813 * (shared_v - 128) -
   0.391 * (shared_u - 128));
 first_pixel_r = Clamp(1.164 * (first_pixel_y - 16) + 1.596 * (shared_v - 128));
+
+// Do the same for the second pixel, substituting first_pixel_y with
+// second_pixel_y.
 ```
