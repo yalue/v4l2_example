@@ -10,6 +10,7 @@
 #ifndef WEBCAM_LIB_H
 #define WEBCAM_LIB_H
 #include <linux/videodev2.h>
+#include <stdint.h>
 
 // Holds information about the webcam, needed by the library functions. Do not
 // directly modify the members of this struct.
@@ -20,8 +21,8 @@ typedef struct {
 
 // Holds the resolution of a single discrete frame of video.
 typedef struct {
-  int width;
-  int height;
+  uint32_t width;
+  uint32_t height;
 } WebcamResolution;
 
 // Takes a device path (e.g. /dev/video0) and a pointer to a WebcamInfo struct

@@ -16,6 +16,7 @@ static char* ErrorString(void) {
 
 int main(int argc, char **argv) {
   WebcamInfo webcam;
+  WebcamResolution resolutions[8];
   if (argc != 2) {
     printf("Usage: %s <device path e.g. \"/dev/video0\">\n", argv[0]);
     return 1;

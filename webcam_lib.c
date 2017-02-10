@@ -199,3 +199,41 @@ void CloseWebcam(WebcamInfo *webcam) {
   close(webcam->fd);
   memset(webcam, 0, sizeof(*webcam));
 }
+
+int GetSupportedYUYVResolutions(WebcamInfo *webcam,
+    WebcamResolution *resolutions, int resolutions_count) {
+  struct v4l2_frmsizeenum info;
+  int result;
+  uint32_t api_index;
+  int output_index = 0;
+  info.pixel_format = v4l2_fourcc('Y', 'U', 'Y', 'V');
+  // Ensure that all resolutions are zeroed-out so if the array isn't totally
+  // full, the unset resolutions will simply be 0x0.
+  memset(resolutions, 0, sizeof(WebcamResolution) * resolutions_count);
+
+  // The API index tracks all of the frame sizes, but the output index only
+  // tracks discrete frame sizes.
+  for (api_index = 0; ; api_index++) {
+    if (output_index > resolutions_count) break;
+    info.index = api_index;
+    result = ioctl(webcam->fd, VIDIOC_ENUM_FRAMESIZES, &info);
+    if (result < 0) {
+      if (errno == EINVAL) break;
+      return 0;
+    }
+    // Skip continuous frame types.
+    if (info.type == V4L2_FRMSIZE_TYPE_CONTINUOUS) continue;
+    // Skip stepwise frame types.
+    if (info.type == V4L2_FRMSIZE_TYPE_STEPWISE) continue;
+    // This is an error--encountered a frame size not defined by the v4l2
+    // spec (should never happen).
+    if (info.type != V4L2_FRMSIZE_TYPE_DISCRETE) return 0;
+    resolutions[output_index].width = info.discrete.width;
+    resolutions[output_index].height = info.discrete.height;
+    output_index++;
+  }
+  return 1;
+
+}
+
+
