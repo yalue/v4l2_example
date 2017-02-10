@@ -23,8 +23,8 @@ Converting YUYV to RGB
 Webcams often support YUYV color rather than RGB. This project currently
 directly displays the YUYV image using SDL, which supports YUYV out-of-the-box.
 Converting from YUYV to RGB requires converting 2 pixels at a time. Here was an
-attempted algorithm at converting a YUYV to RGB image, which wasn't quite
-working yet:
+attempted algorithm at converting a YUYV to RGB image, which doesn't work and
+is left here while I work on it:
 
 ```c
 uint8_t Clamp(float v) {

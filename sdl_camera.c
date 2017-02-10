@@ -99,7 +99,8 @@ error_exit:
   exit(1);
 }
 
-// Copy images to the camera, until SDL receives a quit event.
+// Copy images from the camera to the window, until an SDL quit event is
+// detected.
 static void MainLoop(void) {
   SDL_Event event;
   size_t frame_size = 0;
@@ -115,12 +116,14 @@ static void MainLoop(void) {
         break;
       }
     }
+    // Start loading a new frame from the webcam.
     if (!LoadFrame(webcam)) {
       printf("Error getting webcam frame: %s\n", ErrorString());
       goto error_exit;
     }
     // Sleep for 10 ms while the frame gets loaded.
     usleep(10000);
+    // Lock the texture in order to modify its pixel data directly.
     if (SDL_LockTexture(g.texture, NULL, &texture_pixels, &texture_pitch)
       < 0) {
       printf("Error locking SDL texture: %s\n", SDL_GetError());
@@ -131,11 +134,16 @@ static void MainLoop(void) {
         texture_pitch);
       goto error_exit;
     }
+    // By this point, the image data should have finished loading, so get a
+    // pointer to its location.
     if (!GetFrameBuffer(webcam, &frame_bytes, &frame_size)) {
       printf("Error getting frame from webcam: %s\n", ErrorString());
       goto error_exit;
     }
+    // Directly copy the image data from the camera to the texture buffer--
+    // they're configured to use the same format (YUYV).
     memcpy(texture_pixels, frame_bytes, frame_size);
+    // Finalize the texture changes, re-draw the texture, re-draw the window
     SDL_UnlockTexture(g.texture);
     if (SDL_RenderCopy(g.renderer, g.texture, NULL, NULL) < 0) {
       printf("Error rendering texture: %s\n", SDL_GetError());
