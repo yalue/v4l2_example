@@ -9,8 +9,12 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <unistd.h>
 #include "webcam_lib.h"
+
+// The specifier used when requesting the YUYV format from V4L2.
+#define YUYV_FORMAT_CODE (v4l2_fourcc('Y', 'U', 'Y', 'V'))
 
 // Prints the meaning of the set flags in the v4l2_capability struct's flag
 // fields.
@@ -183,6 +187,16 @@ int PrintCapabilityDetails(WebcamInfo *webcam) {
   return 1;
 }
 
+// Verifies that the flags for video capture and streaming are set in the
+// webcam's capabilities structure, otherwise we can't use it to get images.
+// This doesn't require the fd field to be set.
+static int VerifyCaptureAndStreaming(WebcamInfo *webcam) {
+  uint32_t flags = webcam->capabilities.capabilities;
+  // Has both the single-planar capture (1) and streaming (0x4000000) bits set.
+  uint32_t desired = 0x4000001;
+  return (flags & desired) == desired;
+}
+
 int OpenWebcam(char *path, WebcamInfo *webcam) {
   int fd = open(path, O_RDWR);
   memset(webcam, 0, sizeof(*webcam));
@@ -191,22 +205,35 @@ int OpenWebcam(char *path, WebcamInfo *webcam) {
     close(fd);
     return 0;
   }
+  if (!VerifyCaptureAndStreaming(webcam)) {
+    close(fd);
+    memset(webcam, 0, sizeof(*webcam));
+    errno = ENOTSUP;
+    return 0;
+  }
   webcam->fd = fd;
+  // Set these once, since they're used pretty often.
+  webcam->buffer_info.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  webcam->buffer_info.memory = V4L2_MEMORY_MMAP;
+  webcam->buffer_info.index = 0;
   return 1;
 }
 
 void CloseWebcam(WebcamInfo *webcam) {
   close(webcam->fd);
+  if (webcam->image_buffer) {
+    munmap(webcam->image_buffer, webcam->buffer_info.length);
+  }
   memset(webcam, 0, sizeof(*webcam));
 }
 
-int GetSupportedYUYVResolutions(WebcamInfo *webcam,
-    WebcamResolution *resolutions, int resolutions_count) {
+int GetSupportedResolutions(WebcamInfo *webcam, WebcamResolution *resolutions,
+    int resolutions_count) {
   struct v4l2_frmsizeenum info;
   int result;
   uint32_t api_index;
   int output_index = 0;
-  info.pixel_format = v4l2_fourcc('Y', 'U', 'Y', 'V');
+  info.pixel_format = YUYV_FORMAT_CODE;
   // Ensure that all resolutions are zeroed-out so if the array isn't totally
   // full, the unset resolutions will simply be 0x0.
   memset(resolutions, 0, sizeof(WebcamResolution) * resolutions_count);
@@ -227,13 +254,95 @@ int GetSupportedYUYVResolutions(WebcamInfo *webcam,
     if (info.type == V4L2_FRMSIZE_TYPE_STEPWISE) continue;
     // This is an error--encountered a frame size not defined by the v4l2
     // spec (should never happen).
-    if (info.type != V4L2_FRMSIZE_TYPE_DISCRETE) return 0;
+    if (info.type != V4L2_FRMSIZE_TYPE_DISCRETE) {
+      // This is probably not quite the right thing to put here, but it should
+      // be unique enough to trace back to this cause.
+      errno = EPFNOSUPPORT;
+      return 0;
+    }
     resolutions[output_index].width = info.discrete.width;
     resolutions[output_index].height = info.discrete.height;
     output_index++;
   }
   return 1;
-
 }
 
+int SetResolution(WebcamInfo *webcam, uint32_t width, uint32_t height) {
+  struct v4l2_format format;
+  struct v4l2_requestbuffers buffer_request;
+  struct v4l2_buffer *buffer_info;
+  memset(&format, 0, sizeof(format));
+  memset(&buffer_request, 0, sizeof(buffer_request));
+  buffer_info = &(webcam->buffer_info);
 
+  // Ensure that SetResolution hasn't been called before.
+  if (webcam->image_buffer) return 0;
+
+  // First, notify the device which video format and resolution we want.
+  format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  format.fmt.pix.width = width;
+  format.fmt.pix.height = height;
+  format.fmt.pix.pixelformat = YUYV_FORMAT_CODE;
+  if (ioctl(webcam->fd, VIDIOC_S_FMT, &format) < 0) {
+    return 0;
+  }
+
+  // Next, tell the device we want to use a single mmap'd buffer.
+  buffer_request.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  buffer_request.memory = V4L2_MEMORY_MMAP;
+  buffer_request.count = 1;
+  if (ioctl(webcam->fd, VIDIOC_REQBUFS, &buffer_request) < 0) {
+    return 0;
+  }
+
+  // Next, get the device to tell us how much memory to allocate for the frame
+  // buffer.
+  if (ioctl(webcam->fd, VIDIOC_QUERYBUF, buffer_info) < 0) {
+    return 0;
+  }
+
+  // Allocate the buffer which the video frame will get written to.
+  webcam->image_buffer = mmap(NULL, buffer_info->length,
+    PROT_READ | PROT_WRITE, MAP_SHARED, webcam->fd, buffer_info->m.offset);
+  if (webcam->image_buffer == MAP_FAILED) {
+    return 0;
+  }
+
+  // Activate streaming mode.
+  if (ioctl(webcam->fd, VIDIOC_STREAMON, &(buffer_info->type)) < 0) {
+    return 0;
+  }
+
+  // Now we're ready to receive image data. Yay.
+  memset(webcam->image_buffer, 0, buffer_info->length);
+  webcam->resolution.width = width;
+  webcam->resolution.height = height;
+  return 1;
+}
+
+void GetResolution(WebcamInfo *webcam, uint32_t *width, uint32_t *height) {
+  *width = webcam->resolution.width;
+  *height = webcam->resolution.height;
+}
+
+int LoadFrame(WebcamInfo *webcam) {
+  if (ioctl(webcam->fd, VIDIOC_QBUF, &(webcam->buffer_info)) < 0) {
+    return 0;
+  }
+  return 1;
+}
+
+int GetFrameBuffer(WebcamInfo *webcam, void **buffer, size_t *size) {
+  if (ioctl(webcam->fd, VIDIOC_DQBUF, &(webcam->buffer_info)) < 0) {
+    return 0;
+  }
+  *buffer = webcam->image_buffer;
+  // The API allows bytesused to remain unset, in which case the length field
+  // (the full size of the buffer) is used.
+  if (webcam->buffer_info.bytesused) {
+    *size = webcam->buffer_info.bytesused;
+  } else {
+    *size = webcam->buffer_info.length;
+  }
+  return 1;
+}
