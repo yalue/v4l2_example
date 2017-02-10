@@ -9,7 +9,7 @@
 // OpenWebcam() to CloseWebcam(...) to clean up resources.
 #ifndef WEBCAM_LIB_H
 #define WEBCAM_LIB_H
-#include <linux/videodev.h>
+#include <linux/videodev2.h>
 
 // Holds information about the webcam, needed by the library functions. Do not
 // directly modify the members of this struct.
@@ -18,30 +18,32 @@ typedef struct {
   struct v4l2_capability capabilities;
 } WebcamInfo;
 
+// Holds the resolution of a single discrete frame of video.
 typedef struct {
-  uint8_t format_name[32];
-  
-} VideoMode;
+  int width;
+  int height;
+} WebcamResolution;
 
 // Takes a device path (e.g. /dev/video0) and a pointer to a WebcamInfo struct
 // to populate. Returns 0 on error.
-int OpenWebcam(char *path, WebcamInfo *info);
+int OpenWebcam(char *path, WebcamInfo *webcam);
 
 // Closes the webcam, freeing any allocated resources.
-void CloseWebcam(WebcamInfo *info);
+void CloseWebcam(WebcamInfo *webcam);
 
 // Prints information about the open webcam to stdout. Returns 0 on error.
-int PrintCapabilityDetails(WebcamInfo *info);
+int PrintCapabilityDetails(WebcamInfo *webcam);
 
-// Takes a pointer to a WebcamInfo struct, a pointer to an array of VideoModes
-// structs, the number of entries in the VideoModes array, and a pointer to an
-// which will be set to the number of modes needed. If the modes argument is
-// NULL, this will still set the modes_needed value to enable allocating an
-// array of the right size. If it isn't needed, modes_needed can be set to
-// NULL, in which case this will return an error if VideoModes is also NULL.
-// Returns 0 on error and nonzero otherwise. This will *only* return
-// single-plane discrete-frame modes.
-int GetSupportedVideoModes(WebcamInfo *info, VideoMode *modes,
-    int modes_count, int *modes_needed);
+// Prints information about the webcam's supported video formats to stdout.
+// Returns 0 on error.
+int PrintVideoFormatDetails(WebcamInfo *webcam);
+
+// Gets the supported YUYV (4:2:2) resolutions from the webcam. This will only
+// provide resolutions for single-planar, discrete frames. This takes a pointer
+// to an array of WebcamResolution structs, and will fill in up to
+// resolutions_count members. Any entries in the list beyond the number of
+// available resolutions will be set to 0. This returns 0 on error.
+int GetSupportedYUYVResolutions(WebcamInfo *webcam,
+    WebcamResolution *resolutions, int resolutions_count);
 
 #endif  // WEBCAM_LIB_H
