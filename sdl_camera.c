@@ -8,7 +8,6 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <unistd.h>
-#include "convert_yuyv.h"
 #include "webcam_lib.h"
 
 static struct {

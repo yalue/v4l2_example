@@ -10,15 +10,21 @@ camera using only Linux's native V4L2 (Video For Linux version 2) interface.
 Usage
 -----
 
-Run `make`, followed by `./v4l2_test /dev/video0`. This should print
-information about the camera and save a file named output.bmp, containing the
-current video frame.
+First, install SDL2, which this project depends on:
+`sudo apt install libsdl2-dev`
+
+Run `make`, followed by `./sdl_camera /dev/video0`. This should print
+information about the camera and show a window displaying a video feed from the
+camera.
 
 Converting YUYV to RGB
 ----------------------
 
-Converting from YUYV to RGB requires converting 2 pixels at a time. For each
-pixel:
+Webcams often support YUYV color rather than RGB. This project currently
+directly displays the YUYV image using SDL, which supports YUYV out-of-the-box.
+Converting from YUYV to RGB requires converting 2 pixels at a time. Here was an
+attempted algorithm at converting a YUYV to RGB image, which wasn't quite
+working yet:
 
 ```c
 uint8_t Clamp(float v) {
