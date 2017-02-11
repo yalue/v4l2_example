@@ -10,6 +10,9 @@
 #include <unistd.h>
 #include "webcam_lib.h"
 
+// The number of webcam resolutions to enumerate when checking resolutions.
+#define MAX_RESOLUTION_COUNT (8)
+
 static struct {
   WebcamInfo webcam;
   SDL_Window *window;
@@ -38,6 +41,36 @@ static void CleanupSDL(void) {
   }
 }
 
+// Enumerates the resolutions provided by the webcam and selects a suitable
+// width and height. To be called during SetupWebcam.
+static void SelectResolution(void) {
+  WebcamResolution resolutions[MAX_RESOLUTION_COUNT];
+  WebcamInfo *webcam = &(g.webcam);
+  int selected_index = -1;
+  int selected_size = 0x7fffffff;
+  int current_size, i;
+  memset(resolutions, 0, sizeof(resolutions));
+  if (!GetSupportedResolutions(webcam, resolutions, MAX_RESOLUTION_COUNT)) {
+    printf("Error getting supported resolutions: %s\n", ErrorString());
+    CloseWebcam(webcam);
+    exit(1);
+  }
+  for (i = 0; i < MAX_RESOLUTION_COUNT; i++) {
+    current_size = resolutions[i].width * resolutions[i].height;
+    if (current_size == 0) break;
+    if (current_size > selected_size) continue;
+    selected_size = current_size;
+    selected_index = i;
+  }
+  if (selected_index < 0) {
+    printf("Error: Found no valid resolutions.\n");
+    CloseWebcam(webcam);
+    exit(1);
+  }
+  g.w = resolutions[selected_index].width;
+  g.h = resolutions[selected_index].height;
+}
+
 // Initializes the webcam struct. Exits on error.
 static void SetupWebcam(char *path) {
   WebcamInfo *webcam = &(g.webcam);
@@ -53,7 +86,8 @@ static void SetupWebcam(char *path) {
     printf("Error printing video format details: %s\n", ErrorString());
     goto error_exit;
   }
-  if (!SetResolution(webcam, 1344, 376)) {
+  SelectResolution();
+  if (!SetResolution(webcam, g.w, g.h)) {
     printf("Error setting video resolution: %s\n", ErrorString());
     goto error_exit;
   }
@@ -67,14 +101,12 @@ error_exit:
 // for displaying the image.
 static void SetupSDL(void) {
   WebcamInfo *webcam = &(g.webcam);
-  uint32_t w, h;
-  GetResolution(webcam, &w, &h);
   if (SDL_Init(SDL_INIT_EVERYTHING) < 0) {
     printf("SDL error: %s\n", SDL_GetError());
     goto error_exit;
   }
   g.window = SDL_CreateWindow("Webcam view", SDL_WINDOWPOS_UNDEFINED,
-    SDL_WINDOWPOS_UNDEFINED, w, h, SDL_WINDOW_SHOWN);
+    SDL_WINDOWPOS_UNDEFINED, g.w, g.h, SDL_WINDOW_SHOWN);
   if (!g.window) {
     printf("SDL error creating window: %s\n", SDL_GetError());
     goto error_exit;
@@ -85,13 +117,11 @@ static void SetupSDL(void) {
     goto error_exit;
   }
   g.texture = SDL_CreateTexture(g.renderer, SDL_PIXELFORMAT_YUY2,
-    SDL_TEXTUREACCESS_STREAMING, w, h);
+    SDL_TEXTUREACCESS_STREAMING, g.w, g.h);
   if (!g.texture) {
     printf("Failed getting SDL texture: %s\n", SDL_GetError());
     goto error_exit;
   }
-  g.w = w;
-  g.h = h;
   return;
 error_exit:
   CloseWebcam(webcam);
@@ -166,6 +196,7 @@ int main(int argc, char **argv) {
   memset(&g, 0, sizeof(g));
   SetupWebcam(argv[1]);
   SetupSDL();
+  printf("Showing %dx%d video.\n", (int) g.w, (int) g.h);
   MainLoop();
   CloseWebcam(&(g.webcam));
   CleanupSDL();
