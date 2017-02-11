@@ -8,11 +8,8 @@ all: sdl_camera
 webcam_lib.o: webcam_lib.c webcam_lib.h
 	gcc -c $(CFLAGS) webcam_lib.c -o webcam_lib.o
 
-convert_yuyv.o: convert_yuyv.c convert_yuyv.h
-
-sdl_camera: sdl_camera.c webcam_lib.o convert_yuyv.o
-	gcc $(CFLAGS) webcam_lib.o convert_yuyv.o sdl_camera.c -o sdl_camera \
-		$(SDL_FLAGS)
+sdl_camera: sdl_camera.c webcam_lib.o
+	gcc $(CFLAGS) webcam_lib.o sdl_camera.c -o sdl_camera $(SDL_FLAGS)
 
 clean:
 	rm -f sdl_camera

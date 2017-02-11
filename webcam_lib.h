@@ -51,8 +51,8 @@ int GetSupportedResolutions(WebcamInfo *webcam, WebcamResolution *resolutions,
     int resolutions_count);
 
 // Set the desired resolution for frame outputs. This must be called before
-// BeginLoadingFrame or GetFrameBuffer. This returns 0 on error. It will fail
-// if called more than once on a WebcamInfo struct. To change resolutions,
+// BeginLoadingNextFrame or GetFrameBuffer. This returns 0 on error. It will
+// fail if called more than once on a WebcamInfo struct. To change resolutions,
 // first call CloseWebcam() and OpenWebcam() before this.
 int SetResolution(WebcamInfo *webcam, uint32_t width, uint32_t height);
 
@@ -63,14 +63,23 @@ void GetResolution(WebcamInfo *webcam, uint32_t *width, uint32_t *height);
 // Starts loading the next frame into a buffer to be retrieved using
 // GetFrameBuffer. This function won't block, but it may return 0 on error,
 // if, for example, SetResolution hasn't been called yet.
-int BeginLoadingFrame(WebcamInfo *webcam);
+int BeginLoadingNextFrame(WebcamInfo *webcam);
 
 // Sets buffer to point to the frame buffer containing YUYV pixel data, and
 // size to the number of bytes used for pixel data in the buffer. Do not free
 // the buffer from this function; it will be freed when CloseWebcam is called.
 // Returns 0 on error, such as if SetResolution() hasn't been called yet.
-// BeginLoadingFrame() must be called previously for this to succeed. This may
-// block if the frame hasn't finished transferring yet.
+// BeginLoadingNextFrame() must be called previously for this to succeed. This
+// may block if the frame hasn't finished transferring yet.
 int GetFrameBuffer(WebcamInfo *webcam, void **buffer, size_t *size);
+
+// Converts the YUYV buffer pointed to by input to the 4-byte RGBA buffer
+// pointed to by output. Each image is w pixels wide and h pixels tall. The row
+// pitches are the number of bytes in a row for each image. Normally, this will
+// just be 2 * w for the YUYV input pitch and 4 * w for the RGBA output pitch.
+// The byte order for the RGBA colors will be A = output[0], B = output[1], ...
+// Returns 0 on error.
+int ConvertYUYVToRGBA(uint8_t *input, uint8_t *output, int w, int h,
+    int input_pitch, int output_pitch);
 
 #endif  // WEBCAM_LIB_H

@@ -106,7 +106,8 @@ static void SetupSDL(void) {
     goto error_exit;
   }
   g.window = SDL_CreateWindow("Webcam view", SDL_WINDOWPOS_UNDEFINED,
-    SDL_WINDOWPOS_UNDEFINED, g.w, g.h, SDL_WINDOW_SHOWN);
+    SDL_WINDOWPOS_UNDEFINED, g.w, g.h, SDL_WINDOW_SHOWN |
+    SDL_WINDOW_RESIZABLE);
   if (!g.window) {
     printf("SDL error creating window: %s\n", SDL_GetError());
     goto error_exit;
@@ -116,7 +117,7 @@ static void SetupSDL(void) {
     printf("Failed creating SDL renderer: %s\n", SDL_GetError());
     goto error_exit;
   }
-  g.texture = SDL_CreateTexture(g.renderer, SDL_PIXELFORMAT_YUY2,
+  g.texture = SDL_CreateTexture(g.renderer, SDL_PIXELFORMAT_RGBA8888,
     SDL_TEXTUREACCESS_STREAMING, g.w, g.h);
   if (!g.texture) {
     printf("Failed getting SDL texture: %s\n", SDL_GetError());
@@ -147,7 +148,7 @@ static void MainLoop(void) {
       }
     }
     // Start loading a new frame from the webcam.
-    if (!BeginLoadingFrame(webcam)) {
+    if (!BeginLoadingNextFrame(webcam)) {
       printf("Error getting webcam frame: %s\n", ErrorString());
       goto error_exit;
     }
@@ -159,20 +160,17 @@ static void MainLoop(void) {
       printf("Error locking SDL texture: %s\n", SDL_GetError());
       goto error_exit;
     }
-    if (texture_pitch != (g.w * 2)) {
-      printf("Bad texture pitch. Wanted %d, got %d\n", (int) (g.w * 2),
-        texture_pitch);
-      goto error_exit;
-    }
     // By this point, the image data should have finished loading, so get a
     // pointer to its location.
     if (!GetFrameBuffer(webcam, &frame_bytes, &frame_size)) {
       printf("Error getting frame from webcam: %s\n", ErrorString());
       goto error_exit;
     }
-    // Directly copy the image data from the camera to the texture buffer--
-    // they're configured to use the same format (YUYV).
-    memcpy(texture_pixels, frame_bytes, frame_size);
+    if (!ConvertYUYVToRGBA(frame_bytes, texture_pixels, g.w, g.h, g.w * 2,
+      texture_pitch)) {
+      printf("Failed converting YUYV to RGBA color.\n");
+      goto error_exit;
+    }
     // Finalize the texture changes, re-draw the texture, re-draw the window
     SDL_UnlockTexture(g.texture);
     if (SDL_RenderCopy(g.renderer, g.texture, NULL, NULL) < 0) {
