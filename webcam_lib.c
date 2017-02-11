@@ -325,7 +325,7 @@ void GetResolution(WebcamInfo *webcam, uint32_t *width, uint32_t *height) {
   *height = webcam->resolution.height;
 }
 
-int LoadFrame(WebcamInfo *webcam) {
+int BeginLoadingFrame(WebcamInfo *webcam) {
   if (ioctl(webcam->fd, VIDIOC_QBUF, &(webcam->buffer_info)) < 0) {
     return 0;
   }

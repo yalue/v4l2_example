@@ -51,9 +51,9 @@ int GetSupportedResolutions(WebcamInfo *webcam, WebcamResolution *resolutions,
     int resolutions_count);
 
 // Set the desired resolution for frame outputs. This must be called before
-// LoadFrame or GetFrameBuffer. This returns 0 on error. It will fail if called
-// more than once on a WebcamInfo struct. To change resolutions, first call
-// CloseWebcam() and OpenWebcam() before this.
+// BeginLoadingFrame or GetFrameBuffer. This returns 0 on error. It will fail
+// if called more than once on a WebcamInfo struct. To change resolutions,
+// first call CloseWebcam() and OpenWebcam() before this.
 int SetResolution(WebcamInfo *webcam, uint32_t width, uint32_t height);
 
 // Sets width and height to the current resolution of the webcam. They will
@@ -63,14 +63,14 @@ void GetResolution(WebcamInfo *webcam, uint32_t *width, uint32_t *height);
 // Starts loading the next frame into a buffer to be retrieved using
 // GetFrameBuffer. This function won't block, but it may return 0 on error,
 // if, for example, SetResolution hasn't been called yet.
-int LoadFrame(WebcamInfo *webcam);
+int BeginLoadingFrame(WebcamInfo *webcam);
 
 // Sets buffer to point to the frame buffer containing YUYV pixel data, and
 // size to the number of bytes used for pixel data in the buffer. Do not free
 // the buffer from this function; it will be freed when CloseWebcam is called.
 // Returns 0 on error, such as if SetResolution() hasn't been called yet.
-// LoadFrame() must be called previously for this to succeed. This may block if
-// the frame hasn't finished transferring yet.
+// BeginLoadingFrame() must be called previously for this to succeed. This may
+// block if the frame hasn't finished transferring yet.
 int GetFrameBuffer(WebcamInfo *webcam, void **buffer, size_t *size);
 
 #endif  // WEBCAM_LIB_H

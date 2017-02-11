@@ -147,7 +147,7 @@ static void MainLoop(void) {
       }
     }
     // Start loading a new frame from the webcam.
-    if (!LoadFrame(webcam)) {
+    if (!BeginLoadingFrame(webcam)) {
       printf("Error getting webcam frame: %s\n", ErrorString());
       goto error_exit;
     }
