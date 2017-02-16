@@ -11,7 +11,9 @@ library for managing webcams and getting video frames.
 Viewing the Demo
 ----------------
 
-First, install SDL2, which the demo depends on:
+First, install SDL2, which the demo depends on (the library itself doesn't
+need SDL, though, so only do this if you care about the demo program):
+
 `sudo apt install libsdl2-dev`
 
 Run `make`, followed by `./sdl_camera /dev/video0`. This should print
