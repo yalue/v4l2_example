@@ -3,12 +3,10 @@
 // Usage:
 //    ./sdl_camera <device path e.g. "/dev/video0">
 #include <errno.h>
-#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <SDL2/SDL.h>
-#include <sys/mman.h>
 #include <time.h>
 #include <unistd.h>
 #include "webcam_lib.h"
@@ -233,7 +231,6 @@ static void MainLoop(void) {
     1 / SECONDS_PER_FRAME, dropped_count);
   return;
 error_exit:
-  munlockall();
   CloseWebcam(webcam);
   CleanupSDL();
   exit(1);
@@ -247,15 +244,8 @@ int main(int argc, char **argv) {
   memset(&g, 0, sizeof(g));
   SetupWebcam(argv[1]);
   SetupSDL();
-  if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0) {
-    printf("Failed locking pages into memory: %s\n", ErrorString());
-    CloseWebcam(&(g.webcam));
-    CleanupSDL();
-    return 1;
-  }
   printf("Showing %dx%d video.\n", (int) g.w, (int) g.h);
   MainLoop();
-  munlockall();
   CloseWebcam(&(g.webcam));
   CleanupSDL();
   return 0;
