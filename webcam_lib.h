@@ -12,6 +12,14 @@
 #include <linux/videodev2.h>
 #include <stdint.h>
 
+// This holds potential return values from GetFrameBuffer. The device may
+// either be currently copying, finished copying, or have an error.
+typedef enum {
+  FRAME_NOT_READY,
+  FRAME_READY,
+  DEVICE_ERROR,
+} FrameBufferState;
+
 // Holds the resolution of a single discrete frame of video.
 typedef struct {
   uint32_t width;
@@ -68,10 +76,12 @@ int BeginLoadingNextFrame(WebcamInfo *webcam);
 // Sets buffer to point to the frame buffer containing YUYV pixel data, and
 // size to the number of bytes used for pixel data in the buffer. Do not free
 // the buffer from this function; it will be freed when CloseWebcam is called.
-// Returns 0 on error, such as if SetResolution() hasn't been called yet.
 // BeginLoadingNextFrame() must be called previously for this to succeed. This
-// may block if the frame hasn't finished transferring yet.
-int GetFrameBuffer(WebcamInfo *webcam, void **buffer, size_t *size);
+// function will return FRAME_READY on success, FRAME_NOT_READY if data is
+// still being copied (this is non-blocking), and DEVICE_ERROR if the internal
+// API returns an error.
+FrameBufferState GetFrameBuffer(WebcamInfo *webcam, void **buffer,
+  size_t *size);
 
 // Converts the YUYV buffer pointed to by input to the 4-byte RGBA buffer
 // pointed to by output. Each image is w pixels wide and h pixels tall. The row

@@ -7,11 +7,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <SDL2/SDL.h>
+#include <time.h>
 #include <unistd.h>
 #include "webcam_lib.h"
 
 // The number of webcam resolutions to enumerate when checking resolutions.
 #define MAX_RESOLUTION_COUNT (8)
+
+// The number of seconds to wait between attempting to poll for frames.
+#define SECONDS_PER_FRAME (1.0 / 15.0)
 
 static struct {
   WebcamInfo webcam;
@@ -41,8 +45,25 @@ static void CleanupSDL(void) {
   }
 }
 
-// Enumerates the resolutions provided by the webcam and selects a suitable
-// width and height. To be called during SetupWebcam.
+// Returns the current system time in seconds. Exits if an error occurs while
+// getting the time.
+static double CurrentSeconds(void) {
+  struct timespec ts;
+  if (clock_gettime(CLOCK_REALTIME, &ts) != 0) {
+    printf("Error getting time.\n");
+    exit(1);
+  }
+  return ((double) ts.tv_sec) + (((double) ts.tv_nsec) / 1e9);
+}
+
+// Sleeps for the given floating-point number of seconds.
+static void SleepSeconds(double to_sleep) {
+  if (to_sleep <= 0) return;
+  usleep(to_sleep * 1e6);
+}
+
+// Enumerates the resolutions provided by the webcam and selects the smallest
+// available one.
 static void SelectResolution(void) {
   WebcamResolution resolutions[MAX_RESOLUTION_COUNT];
   WebcamInfo *webcam = &(g.webcam);
@@ -139,7 +160,17 @@ static void MainLoop(void) {
   void *texture_pixels = NULL;
   int texture_pitch = 0;
   int quit = 0;
+  double last_frame_start;
+  FrameBufferState frame_state;
   WebcamInfo *webcam = &(g.webcam);
+  // Load the first frame and sleep for the duration of a full cycle in order
+  // to (hopefully) have a frame loaded on the first loop iteration.
+  if (!BeginLoadingNextFrame(webcam)) {
+    printf("Error loading initial frame: %s\n", ErrorString());
+    goto error_exit;
+  }
+  SleepSeconds(SECONDS_PER_FRAME);
+  last_frame_start = CurrentSeconds();
   while (!quit) {
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
@@ -147,25 +178,34 @@ static void MainLoop(void) {
         break;
       }
     }
-    // Start loading a new frame from the webcam.
+    frame_state = GetFrameBuffer(webcam, &frame_bytes, &frame_size);
+    if (frame_state == DEVICE_ERROR) {
+      printf("Error getting frame from webcam: %s\n", ErrorString());
+      goto error_exit;
+    }
+    // Drop this frame if the frame isn't ready--don't update the display.
+    if (frame_state == FRAME_NOT_READY) {
+      printf("Frame dropped.\n");
+      // Sleep for the remaining time in this frame, then reset the sleep timer
+      SleepSeconds(SECONDS_PER_FRAME - (CurrentSeconds() - last_frame_start));
+      last_frame_start = CurrentSeconds();
+      continue;
+    }
+    // The device didn't give an error and the frame was ready, so we can now
+    // enqueue the next frame and update the displayed image.
     if (!BeginLoadingNextFrame(webcam)) {
       printf("Error getting webcam frame: %s\n", ErrorString());
       goto error_exit;
     }
-    // Sleep for 10 ms while the frame gets loaded.
-    usleep(10000);
-    // Lock the texture in order to modify its pixel data directly.
+    // To re-draw the window, "lock" the texture, update its pixel data,
+    // "unlock" the texture, re-draw the texture, then re-draw the window.
     if (SDL_LockTexture(g.texture, NULL, &texture_pixels, &texture_pitch)
       < 0) {
       printf("Error locking SDL texture: %s\n", SDL_GetError());
       goto error_exit;
     }
-    // By this point, the image data should have finished loading, so get a
-    // pointer to its location.
-    if (!GetFrameBuffer(webcam, &frame_bytes, &frame_size)) {
-      printf("Error getting frame from webcam: %s\n", ErrorString());
-      goto error_exit;
-    }
+    // The color conversion will write the RGBA pixel data directly into the
+    // texture's buffer.
     if (!ConvertYUYVToRGBA(frame_bytes, texture_pixels, g.w, g.h, g.w * 2,
       texture_pitch)) {
       printf("Failed converting YUYV to RGBA color.\n");
@@ -178,6 +218,9 @@ static void MainLoop(void) {
       goto error_exit;
     }
     SDL_RenderPresent(g.renderer);
+    // Finally, sleep for the remainder of the time in this frame.
+    SleepSeconds(SECONDS_PER_FRAME - (CurrentSeconds() - last_frame_start));
+    last_frame_start = CurrentSeconds();
   }
   return;
 error_exit:

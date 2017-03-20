@@ -198,9 +198,9 @@ static int VerifyCaptureAndStreaming(WebcamInfo *webcam) {
 }
 
 int OpenWebcam(char *path, WebcamInfo *webcam) {
-  int fd = open(path, O_RDWR);
-  memset(webcam, 0, sizeof(*webcam));
+  int fd = open(path, O_RDWR | O_NONBLOCK);
   if (fd < 0) return 0;
+  memset(webcam, 0, sizeof(*webcam));
   if (ioctl(fd, VIDIOC_QUERYCAP, &(webcam->capabilities)) < 0) {
     close(fd);
     return 0;
@@ -332,9 +332,12 @@ int BeginLoadingNextFrame(WebcamInfo *webcam) {
   return 1;
 }
 
-int GetFrameBuffer(WebcamInfo *webcam, void **buffer, size_t *size) {
-  if (ioctl(webcam->fd, VIDIOC_DQBUF, &(webcam->buffer_info)) < 0) {
-    return 0;
+FrameBufferState GetFrameBuffer(WebcamInfo *webcam, void **buffer,
+  size_t *size) {
+  int result = ioctl(webcam->fd, VIDIOC_DQBUF, &(webcam->buffer_info));
+  if (result != 0) {
+    if (errno == EAGAIN) return FRAME_NOT_READY;
+    return DEVICE_ERROR;
   }
   *buffer = webcam->image_buffer;
   // The API allows bytesused to remain unset, in which case the length field
@@ -344,7 +347,7 @@ int GetFrameBuffer(WebcamInfo *webcam, void **buffer, size_t *size) {
   } else {
     *size = webcam->buffer_info.length;
   }
-  return 1;
+  return FRAME_READY;
 }
 
 // Converts v to a byte, clamping it between 0 and 255.
