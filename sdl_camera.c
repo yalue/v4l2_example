@@ -9,7 +9,6 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include <sys/mman.h>
-#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 #include "webcam_lib.h"
@@ -57,32 +56,6 @@ static double CurrentSeconds(void) {
     exit(1);
   }
   return ((double) ts.tv_sec) + (((double) ts.tv_nsec) / 1e9);
-}
-
-// Returns the physical address of the given buffer, or 0 on error. Make sure
-// that pages are locked before calling this, otherwise it could fail.
-static uint64_t GetPhysicalAddress(void *buffer) {
-  // Each page requires 8 bytes in the pagemap file.
-  int pagemap_offset = (((uint64_t) buffer) / getpagesize()) * 8;
-  uint64_t entry = 0;
-  int fd = open("/proc/self/pagemap", O_RDONLY);
-  if (fd < 0) {
-    printf("Failed opening pagemap file: %s\n", ErrorString());
-    return 0;
-  }
-  if (lseek(fd, pagemap_offset, SEEK_SET) < 0) {
-    printf("Failed seeking pagemap entry for %p: %s\n", buffer, ErrorString());
-    close(fd);
-    return 0;
-  }
-  if (read(fd, &entry, sizeof(entry)) != sizeof(entry)) {
-    printf("Failed reading pagemap entry: %s\n", ErrorString());
-    close(fd);
-    return 0;
-  }
-  close(fd);
-  // The physical frame number is in the bottom 55 bits of the entry.
-  return (entry & 0x7fffffffffffff) * getpagesize();
 }
 
 // Sleeps for the given floating-point number of seconds.
@@ -194,7 +167,6 @@ static void MainLoop(void) {
   FrameBufferState frame_state;
   double overall_start, last_frame_start;
   WebcamInfo *webcam = &(g.webcam);
-  uint64_t physical_address = 0;
   // Load the first frame and sleep for the duration of a full cycle in order
   // to (hopefully) have a frame loaded on the first loop iteration.
   if (!BeginLoadingNextFrame(webcam)) {
@@ -255,14 +227,6 @@ static void MainLoop(void) {
     // Finally, sleep for the remainder of the time in this frame.
     SleepSeconds(SECONDS_PER_FRAME - (CurrentSeconds() - last_frame_start));
     last_frame_start = CurrentSeconds();
-    // Try to display the physical address of the frame buffer for the first
-    // frame only.
-    if (!physical_address) {
-      physical_address = GetPhysicalAddress(frame_bytes);
-      if (!physical_address) goto error_exit;
-      printf("Frame buffer physical address: 0x%016lx\n",
-        (unsigned long) physical_address);
-    }
   }
   printf("Attempted to display %llu frames in %f seconds (wanted %f FPS). "
     "Dropped %llu.\n", total_count, CurrentSeconds() - overall_start,
