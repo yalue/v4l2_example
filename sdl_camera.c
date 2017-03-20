@@ -3,10 +3,13 @@
 // Usage:
 //    ./sdl_camera <device path e.g. "/dev/video0">
 #include <errno.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <SDL2/SDL.h>
+#include <sys/mman.h>
+#include <sys/types.h>
 #include <time.h>
 #include <unistd.h>
 #include "webcam_lib.h"
@@ -15,7 +18,7 @@
 #define MAX_RESOLUTION_COUNT (8)
 
 // The number of seconds to wait between attempting to poll for frames.
-#define SECONDS_PER_FRAME (1.0 / 15.0)
+#define SECONDS_PER_FRAME (1.0 / 10.0)
 
 static struct {
   WebcamInfo webcam;
@@ -54,6 +57,32 @@ static double CurrentSeconds(void) {
     exit(1);
   }
   return ((double) ts.tv_sec) + (((double) ts.tv_nsec) / 1e9);
+}
+
+// Returns the physical address of the given buffer, or 0 on error. Make sure
+// that pages are locked before calling this, otherwise it could fail.
+static uint64_t GetPhysicalAddress(void *buffer) {
+  // Each page requires 8 bytes in the pagemap file.
+  int pagemap_offset = (((uint64_t) buffer) / getpagesize()) * 8;
+  uint64_t entry = 0;
+  int fd = open("/proc/self/pagemap", O_RDONLY);
+  if (fd < 0) {
+    printf("Failed opening pagemap file: %s\n", ErrorString());
+    return 0;
+  }
+  if (lseek(fd, pagemap_offset, SEEK_SET) < 0) {
+    printf("Failed seeking pagemap entry for %p: %s\n", buffer, ErrorString());
+    close(fd);
+    return 0;
+  }
+  if (read(fd, &entry, sizeof(entry)) != sizeof(entry)) {
+    printf("Failed reading pagemap entry: %s\n", ErrorString());
+    close(fd);
+    return 0;
+  }
+  close(fd);
+  // The physical frame number is in the bottom 55 bits of the entry.
+  return (entry & 0x7fffffffffffff) * getpagesize();
 }
 
 // Sleeps for the given floating-point number of seconds.
@@ -160,9 +189,12 @@ static void MainLoop(void) {
   void *texture_pixels = NULL;
   int texture_pitch = 0;
   int quit = 0;
-  double last_frame_start;
+  unsigned long long dropped_count = 0;
+  unsigned long long total_count = 0;
   FrameBufferState frame_state;
+  double overall_start, last_frame_start;
   WebcamInfo *webcam = &(g.webcam);
+  uint64_t physical_address = 0;
   // Load the first frame and sleep for the duration of a full cycle in order
   // to (hopefully) have a frame loaded on the first loop iteration.
   if (!BeginLoadingNextFrame(webcam)) {
@@ -171,7 +203,9 @@ static void MainLoop(void) {
   }
   SleepSeconds(SECONDS_PER_FRAME);
   last_frame_start = CurrentSeconds();
+  overall_start = last_frame_start;
   while (!quit) {
+    total_count++;
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_QUIT) {
         quit = 1;
@@ -185,7 +219,7 @@ static void MainLoop(void) {
     }
     // Drop this frame if the frame isn't ready--don't update the display.
     if (frame_state == FRAME_NOT_READY) {
-      printf("Frame dropped.\n");
+      dropped_count++;
       // Sleep for the remaining time in this frame, then reset the sleep timer
       SleepSeconds(SECONDS_PER_FRAME - (CurrentSeconds() - last_frame_start));
       last_frame_start = CurrentSeconds();
@@ -221,9 +255,21 @@ static void MainLoop(void) {
     // Finally, sleep for the remainder of the time in this frame.
     SleepSeconds(SECONDS_PER_FRAME - (CurrentSeconds() - last_frame_start));
     last_frame_start = CurrentSeconds();
+    // Try to display the physical address of the frame buffer for the first
+    // frame only.
+    if (!physical_address) {
+      physical_address = GetPhysicalAddress(frame_bytes);
+      if (!physical_address) goto error_exit;
+      printf("Frame buffer physical address: 0x%016lx\n",
+        (unsigned long) physical_address);
+    }
   }
+  printf("Attempted to display %llu frames in %f seconds (wanted %f FPS). "
+    "Dropped %llu.\n", total_count, CurrentSeconds() - overall_start,
+    1 / SECONDS_PER_FRAME, dropped_count);
   return;
 error_exit:
+  munlockall();
   CloseWebcam(webcam);
   CleanupSDL();
   exit(1);
@@ -237,8 +283,15 @@ int main(int argc, char **argv) {
   memset(&g, 0, sizeof(g));
   SetupWebcam(argv[1]);
   SetupSDL();
+  if (mlockall(MCL_CURRENT | MCL_FUTURE) != 0) {
+    printf("Failed locking pages into memory: %s\n", ErrorString());
+    CloseWebcam(&(g.webcam));
+    CleanupSDL();
+    return 1;
+  }
   printf("Showing %dx%d video.\n", (int) g.w, (int) g.h);
   MainLoop();
+  munlockall();
   CloseWebcam(&(g.webcam));
   CleanupSDL();
   return 0;
