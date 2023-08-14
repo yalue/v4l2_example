@@ -1,6 +1,6 @@
 .PHONY: all clean
 
-CFLAGSS = -O3 -Wall -Werror
+CFLAGS = -O3 -Wall -Werror
 SDL_FLAGS = $(shell sdl2-config --cflags) $(shell sdl2-config --libs)
 
 all: sdl_camera
